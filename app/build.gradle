@@ -1,0 +1,59 @@
+
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'ru.yourname.dailyflow'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "ru.yourname.dailyflow"
+        minSdk 23
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        // Room schema export (не обязательно, но удобно)
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    // UI
+    implementation "androidx.appcompat:appcompat:1.7.0"
+    implementation "com.google.android.material:material:1.12.0"
+    implementation "androidx.constraintlayout:constraintlayout:2.2.0"
+    implementation "androidx.recyclerview:recyclerview:1.4.0"
+
+    // Lifecycle
+    implementation "androidx.lifecycle:lifecycle-livedata:2.8.7"
+    implementation "androidx.lifecycle:lifecycle-viewmodel:2.8.7"
+
+    // Room (Java через annotationProcessor)
+    implementation "androidx.room:room-runtime:2.6.1"
+    annotationProcessor "androidx.room:room-compiler:2.6.1"
+
+    // WorkManager
+    implementation "androidx.work:work-runtime:2.10.0"
+
+    // JSON + HTTP
+    implementation "com.google.code.gson:gson:2.11.0"
+    implementation "com.squareup.okhttp3:okhttp:4.12.0"
+}
