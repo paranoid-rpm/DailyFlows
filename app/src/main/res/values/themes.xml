@@ -1,4 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+
     <style name="Theme.DailyFlow" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/df_primary</item>
         <item name="colorPrimaryVariant">@color/df_primary_variant</item>
@@ -7,4 +9,5 @@
         <item name="android:statusBarColor" tools:targetApi="l">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/black</item>
     </style>
+
 </resources>

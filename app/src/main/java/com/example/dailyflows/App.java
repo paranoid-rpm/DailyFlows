@@ -1,4 +1,4 @@
-package ru.yourname.dailyflow;
+package com.example.dailyflows;
 
 import android.app.Application;
 
@@ -11,7 +11,7 @@ import androidx.work.WorkManager;
 
 import java.util.concurrent.TimeUnit;
 
-import ru.yourname.dailyflow.workers.WeatherSyncWorker;
+import com.example.dailyflows.workers.WeatherSyncWorker;
 
 public class App extends Application {
 
@@ -21,7 +21,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
 
-        // Следовать системной теме (Day/Night)
+        // Follow system (Day/Night)
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
 
         scheduleWeatherSync();

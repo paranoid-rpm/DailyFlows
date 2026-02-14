@@ -1,4 +1,4 @@
-package ru.yourname.dailyflow.data.repo;
+package com.example.dailyflows.data.repo;
 
 import android.content.Context;
 import android.content.SharedPreferences;

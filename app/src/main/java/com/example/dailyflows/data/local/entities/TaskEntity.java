@@ -1,4 +1,4 @@
-package ru.yourname.dailyflow.data.local.entities;
+package com.example.dailyflows.data.local.entities;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
@@ -23,7 +23,7 @@ public class TaskEntity {
 
     public String note;
 
-    // 0 = нет дедлайна
+    // 0 = no due date
     public long dueAtMillis;
 
     public boolean done;

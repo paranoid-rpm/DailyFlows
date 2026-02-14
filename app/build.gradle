@@ -1,20 +1,18 @@
-
 plugins {
     id 'com.android.application'
 }
 
 android {
-    namespace 'ru.yourname.dailyflow'
+    namespace 'com.example.dailyflows'
     compileSdk 34
 
     defaultConfig {
-        applicationId "ru.yourname.dailyflow"
+        applicationId "com.example.dailyflows"
         minSdk 23
         targetSdk 34
         versionCode 1
         versionName "1.0"
 
-        // Room schema export (не обязательно, но удобно)
         javaCompileOptions {
             annotationProcessorOptions {
                 arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
@@ -36,17 +34,21 @@ android {
 }
 
 dependencies {
-    // UI
+    // Core UI
+    implementation "androidx.core:core:1.13.1"
     implementation "androidx.appcompat:appcompat:1.7.0"
     implementation "com.google.android.material:material:1.12.0"
     implementation "androidx.constraintlayout:constraintlayout:2.2.0"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:1.2.0"
     implementation "androidx.recyclerview:recyclerview:1.4.0"
+    implementation "androidx.fragment:fragment:1.7.1"
+    implementation "androidx.activity:activity:1.9.3"
 
     // Lifecycle
     implementation "androidx.lifecycle:lifecycle-livedata:2.8.7"
     implementation "androidx.lifecycle:lifecycle-viewmodel:2.8.7"
 
-    // Room (Java через annotationProcessor)
+    // Room (Java via annotationProcessor)
     implementation "androidx.room:room-runtime:2.6.1"
     annotationProcessor "androidx.room:room-compiler:2.6.1"
 

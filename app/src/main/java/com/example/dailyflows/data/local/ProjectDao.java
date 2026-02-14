@@ -1,4 +1,4 @@
-package ru.yourname.dailyflow.data.local;
+package com.example.dailyflows.data.local;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
@@ -8,7 +8,7 @@ import androidx.room.Query;
 
 import java.util.List;
 
-import ru.yourname.dailyflow.data.local.entities.ProjectEntity;
+import com.example.dailyflows.data.local.entities.ProjectEntity;
 
 @Dao
 public interface ProjectDao {

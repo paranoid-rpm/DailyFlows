@@ -1,4 +1,4 @@
-package ru.yourname.dailyflow.ui;
+package com.example.dailyflows.ui;
 
 import android.os.Bundle;
 
@@ -8,9 +8,9 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import ru.yourname.dailyflow.R;
-import ru.yourname.dailyflow.ui.agenda.AgendaFragment;
-import ru.yourname.dailyflow.ui.settings.SettingsFragment;
+import com.example.dailyflows.R;
+import com.example.dailyflows.ui.agenda.AgendaFragment;
+import com.example.dailyflows.ui.settings.SettingsFragment;
 
 public class MainActivity extends AppCompatActivity {
 

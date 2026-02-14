@@ -1,4 +1,4 @@
-package ru.yourname.dailyflow.data.repo;
+package com.example.dailyflows.data.repo;
 
 import android.content.Context;
 
@@ -9,9 +9,9 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import ru.yourname.dailyflow.data.local.AppDatabase;
-import ru.yourname.dailyflow.data.local.entities.TaskEntity;
-import ru.yourname.dailyflow.util.NotificationUtil;
+import com.example.dailyflows.data.local.AppDatabase;
+import com.example.dailyflows.data.local.entities.TaskEntity;
+import com.example.dailyflows.util.NotificationUtil;
 
 public class TaskRepository {
 
@@ -30,30 +30,16 @@ public class TaskRepository {
         return db.taskDao().observeOpen();
     }
 
-    public void setDone(String taskId, boolean done) {
-        io.execute(() -> {
-            TaskEntity t = db.taskDao().getById(taskId);
-            if (t == null) return;
-            t.done = done;
-            t.updatedAtMillis = System.currentTimeMillis();
-            db.taskDao().upsert(t);
-
-            if (done) {
-                NotificationUtil.cancelReminderWork(AppDatabase.get(null), null, taskId); // no-op safety
-            }
-        });
-    }
-
     public void upsert(TaskEntity task, Context context) {
         io.execute(() -> {
             if (task.id == null) task.id = UUID.randomUUID().toString();
+
             long now = System.currentTimeMillis();
             if (task.createdAtMillis == 0) task.createdAtMillis = now;
             task.updatedAtMillis = now;
 
             db.taskDao().upsert(task);
 
-            // планируем напоминание, если есть дедлайн и задача не выполнена
             if (!task.done && task.dueAtMillis > 0) {
                 NotificationUtil.scheduleReminderWork(context, task.id, task.title, task.dueAtMillis);
             } else {
@@ -62,10 +48,14 @@ public class TaskRepository {
         });
     }
 
-    public void deleteAll(Runnable onDone) {
+    public void setDone(String taskId, boolean done, Context context) {
         io.execute(() -> {
-            db.taskDao().deleteAll();
-            if (onDone != null) onDone.run();
+            TaskEntity t = db.taskDao().getById(taskId);
+            if (t == null) return;
+            t.done = done;
+            t.updatedAtMillis = System.currentTimeMillis();
+            db.taskDao().upsert(t);
+            if (done) NotificationUtil.cancelReminderWork(context, taskId);
         });
     }
 

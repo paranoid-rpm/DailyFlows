@@ -1,4 +1,4 @@
-package ru.yourname.dailyflow.data.repo;
+package com.example.dailyflows.data.repo;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -10,15 +10,17 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import ru.yourname.dailyflow.data.local.AppDatabase;
-import ru.yourname.dailyflow.data.local.entities.ProjectEntity;
-import ru.yourname.dailyflow.data.local.entities.TaskEntity;
+import com.example.dailyflows.data.local.AppDatabase;
+import com.example.dailyflows.data.local.entities.ProjectEntity;
+import com.example.dailyflows.data.local.entities.TaskEntity;
 
 public class BackupRepository {
 
@@ -50,7 +52,7 @@ public class BackupRepository {
                 ContentResolver cr = context.getContentResolver();
                 try (OutputStream os = cr.openOutputStream(uri, "w")) {
                     if (os == null) throw new IllegalStateException("OutputStream is null");
-                    os.write(json.getBytes());
+                    os.write(json.getBytes(StandardCharsets.UTF_8));
                     os.flush();
                 }
 
@@ -66,9 +68,13 @@ public class BackupRepository {
             try {
                 ContentResolver cr = context.getContentResolver();
                 StringBuilder sb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(cr.openInputStream(uri)))) {
-                    String line;
-                    while ((line = br.readLine()) != null) sb.append(line).append('\n');
+
+                try (InputStream is = cr.openInputStream(uri)) {
+                    if (is == null) throw new IllegalStateException("InputStream is null");
+                    try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                        String line;
+                        while ((line = br.readLine()) != null) sb.append(line).append('\n');
+                    }
                 }
 
                 BackupData data = gson.fromJson(sb.toString(), BackupData.class);

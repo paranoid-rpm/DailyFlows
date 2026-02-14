@@ -1,4 +1,4 @@
-package ru.yourname.dailyflow.data.local;
+package com.example.dailyflows.data.local;
 
 import android.content.Context;
 
@@ -6,8 +6,8 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-import ru.yourname.dailyflow.data.local.entities.ProjectEntity;
-import ru.yourname.dailyflow.data.local.entities.TaskEntity;
+import com.example.dailyflows.data.local.entities.ProjectEntity;
+import com.example.dailyflows.data.local.entities.TaskEntity;
 
 @Database(
         entities = {TaskEntity.class, ProjectEntity.class},
@@ -19,6 +19,7 @@ public abstract class AppDatabase extends RoomDatabase {
     private static volatile AppDatabase INSTANCE;
 
     public abstract TaskDao taskDao();
+
     public abstract ProjectDao projectDao();
 
     public static AppDatabase get(Context context) {

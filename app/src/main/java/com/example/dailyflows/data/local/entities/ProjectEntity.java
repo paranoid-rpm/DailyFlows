@@ -1,4 +1,4 @@
-package ru.yourname.dailyflow.data.local.entities;
+package com.example.dailyflows.data.local.entities;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
@@ -13,7 +13,7 @@ public class ProjectEntity {
     @NonNull
     public String name;
 
-    // hex color string (например "#1A73E8")
+    // hex color string, e.g. "#1A73E8"
     @NonNull
     public String color;
 }

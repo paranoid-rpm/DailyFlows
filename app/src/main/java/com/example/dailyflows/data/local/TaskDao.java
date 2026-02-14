@@ -1,15 +1,14 @@
-package ru.yourname.dailyflow.data.local;
+package com.example.dailyflows.data.local;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
-import androidx.room.Update;
 
 import java.util.List;
 
-import ru.yourname.dailyflow.data.local.entities.TaskEntity;
+import com.example.dailyflows.data.local.entities.TaskEntity;
 
 @Dao
 public interface TaskDao {
@@ -25,9 +24,6 @@ public interface TaskDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void upsert(TaskEntity task);
-
-    @Update
-    void update(TaskEntity task);
 
     @Query("DELETE FROM tasks")
     void deleteAll();
