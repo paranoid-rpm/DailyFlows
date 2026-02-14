@@ -1,11 +1,10 @@
 package com.example.dailyflows.ui.theme
 
-import androidx.compose.ui.graphics.Color
-
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+/**
+ * Placeholders left from the default Compose template.
+ * The app uses Views + XML; no Compose dependencies are required.
+ */
+object DailyFlowsColors {
+    const val PRIMARY: Int = 0xFF1A73E8.toInt()
+    const val SECONDARY: Int = 0xFF34A853.toInt()
+}
