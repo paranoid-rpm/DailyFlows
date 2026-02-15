@@ -75,15 +75,12 @@ public class AgendaFragment extends Fragment {
 
             @Override
             public void onDelete(TaskEntity task) {
-                new Thread(() -> {
-                    AppDatabase.get(requireContext()).taskDao().delete(task);
-                }).start();
-                Snackbar.make(view, "Задача удалена: " + task.title, Snackbar.LENGTH_SHORT).show();
+                deleteTask(task, view);
             }
         });
         rv.setAdapter(adapter);
 
-        ItemTouchHelper touchHelper = new ItemTouchHelper(new TaskListAdapter.SwipeToDeleteCallback(adapter.new Listener() {
+        ItemTouchHelper touchHelper = new ItemTouchHelper(new TaskListAdapter.SwipeToDeleteCallback(new TaskListAdapter.Listener() {
             @Override
             public void onToggleDone(TaskEntity task, boolean done) {}
 
@@ -92,14 +89,7 @@ public class AgendaFragment extends Fragment {
 
             @Override
             public void onDelete(TaskEntity task) {
-                new Thread(() -> {
-                    AppDatabase.get(requireContext()).taskDao().delete(task);
-                }).start();
-                Snackbar.make(view, "Удалено: " + task.title, Snackbar.LENGTH_LONG)
-                        .setAction("Отменить", v -> {
-                            new Thread(() -> AppDatabase.get(requireContext()).taskDao().upsert(task)).start();
-                        })
-                        .show();
+                deleteTask(task, view);
             }
         }, adapter));
         touchHelper.attachToRecyclerView(rv);
@@ -133,6 +123,17 @@ public class AgendaFragment extends Fragment {
             adapter.submitList(out);
             rv.scheduleLayoutAnimation();
         });
+    }
+
+    private void deleteTask(TaskEntity task, View view) {
+        new Thread(() -> {
+            AppDatabase.get(requireContext()).taskDao().delete(task);
+        }).start();
+        Snackbar.make(view, "Удалено: " + task.title, Snackbar.LENGTH_LONG)
+                .setAction("Отменить", v -> {
+                    new Thread(() -> AppDatabase.get(requireContext()).taskDao().upsert(task)).start();
+                })
+                .show();
     }
 
     private void renderHeader() {
