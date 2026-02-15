@@ -6,13 +6,15 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.content.Context;
+import android.text.Editable;
 import android.text.Spannable;
-import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -72,12 +74,30 @@ public class EditTaskActivity extends BaseActivity {
         etNote = findViewById(R.id.etNote);
         fabSave = findViewById(R.id.fabSave);
 
-        findViewById(R.id.btnBold).setOnClickListener(v -> applyStyle(Typeface.BOLD));
-        findViewById(R.id.btnItalic).setOnClickListener(v -> applyStyle(Typeface.ITALIC));
-        findViewById(R.id.btnUnderline).setOnClickListener(v -> applyUnderline());
-        findViewById(R.id.btnBullet).setOnClickListener(v -> insertBullet());
-        findViewById(R.id.btnHeading).setOnClickListener(v -> applyHeading());
-        findViewById(R.id.btnColor).setOnClickListener(v -> showColorPicker());
+        findViewById(R.id.btnBold).setOnClickListener(v -> {
+            haptic();
+            applyStyle(Typeface.BOLD);
+        });
+        findViewById(R.id.btnItalic).setOnClickListener(v -> {
+            haptic();
+            applyStyle(Typeface.ITALIC);
+        });
+        findViewById(R.id.btnUnderline).setOnClickListener(v -> {
+            haptic();
+            applyUnderline();
+        });
+        findViewById(R.id.btnBullet).setOnClickListener(v -> {
+            haptic();
+            insertBullet();
+        });
+        findViewById(R.id.btnHeading).setOnClickListener(v -> {
+            haptic();
+            applyHeading();
+        });
+        findViewById(R.id.btnColor).setOnClickListener(v -> {
+            haptic();
+            showColorPicker();
+        });
 
         fabSave.setOnClickListener(v -> {
             haptic();
@@ -238,49 +258,60 @@ public class EditTaskActivity extends BaseActivity {
     private void applyStyle(int style) {
         int start = etNote.getSelectionStart();
         int end = etNote.getSelectionEnd();
-        if (start >= end) return;
+        if (start < 0 || end < 0 || start >= end) return;
 
-        SpannableString spannable = new SpannableString(etNote.getText());
-        spannable.setSpan(new StyleSpan(style), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        etNote.setText(spannable);
-        etNote.setSelection(end);
-        haptic();
+        Editable editable = etNote.getText();
+        if (editable == null) return;
+
+        SpannableStringBuilder builder = new SpannableStringBuilder(editable);
+        builder.setSpan(new StyleSpan(style), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        etNote.setText(builder);
+        etNote.setSelection(start, end);
     }
 
     private void applyUnderline() {
         int start = etNote.getSelectionStart();
         int end = etNote.getSelectionEnd();
-        if (start >= end) return;
+        if (start < 0 || end < 0 || start >= end) return;
 
-        SpannableString spannable = new SpannableString(etNote.getText());
-        spannable.setSpan(new UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        etNote.setText(spannable);
-        etNote.setSelection(end);
-        haptic();
+        Editable editable = etNote.getText();
+        if (editable == null) return;
+
+        SpannableStringBuilder builder = new SpannableStringBuilder(editable);
+        builder.setSpan(new UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        etNote.setText(builder);
+        etNote.setSelection(start, end);
     }
 
     private void insertBullet() {
         int cursor = etNote.getSelectionStart();
-        etNote.getText().insert(cursor, "• ");
-        haptic();
+        if (cursor < 0) return;
+
+        Editable editable = etNote.getText();
+        if (editable == null) return;
+
+        editable.insert(cursor, "• ");
+        etNote.setSelection(cursor + 2);
     }
 
     private void applyHeading() {
         int start = etNote.getSelectionStart();
         int end = etNote.getSelectionEnd();
-        if (start >= end) return;
+        if (start < 0 || end < 0 || start >= end) return;
 
-        SpannableString spannable = new SpannableString(etNote.getText());
-        spannable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        etNote.setText(spannable);
-        etNote.setSelection(end);
-        haptic();
+        Editable editable = etNote.getText();
+        if (editable == null) return;
+
+        SpannableStringBuilder builder = new SpannableStringBuilder(editable);
+        builder.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        etNote.setText(builder);
+        etNote.setSelection(start, end);
     }
 
     private void showColorPicker() {
         int start = etNote.getSelectionStart();
         int end = etNote.getSelectionEnd();
-        if (start >= end) return;
+        if (start < 0 || end < 0 || start >= end) return;
 
         String[] colors = {"Красный", "Синий", "Зелёный", "Оранжевый", "Фиолетовый"};
         int[] colorValues = {Color.RED, Color.BLUE, Color.GREEN, Color.rgb(255, 140, 0), Color.MAGENTA};
@@ -288,11 +319,13 @@ public class EditTaskActivity extends BaseActivity {
         new AlertDialog.Builder(this)
                 .setTitle("Цвет текста")
                 .setItems(colors, (dialog, which) -> {
-                    SpannableString spannable = new SpannableString(etNote.getText());
-                    spannable.setSpan(new ForegroundColorSpan(colorValues[which]), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    etNote.setText(spannable);
-                    etNote.setSelection(end);
-                    haptic();
+                    Editable editable = etNote.getText();
+                    if (editable == null) return;
+
+                    SpannableStringBuilder builder = new SpannableStringBuilder(editable);
+                    builder.setSpan(new ForegroundColorSpan(colorValues[which]), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    etNote.setText(builder);
+                    etNote.setSelection(start, end);
                 })
                 .show();
     }

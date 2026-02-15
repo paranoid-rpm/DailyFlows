@@ -34,9 +34,8 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnBold"
-                    android:text="B"
-                    android:textStyle="bold"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:icon="@drawable/ic_bold"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
                     android:layout_margin="4dp"
                     android:minWidth="48dp"
                     android:layout_width="wrap_content"
@@ -44,9 +43,8 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnItalic"
-                    android:text="I"
-                    android:textStyle="italic"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:icon="@drawable/ic_italic"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
                     android:layout_margin="4dp"
                     android:minWidth="48dp"
                     android:layout_width="wrap_content"
@@ -54,8 +52,8 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnUnderline"
-                    android:text="U"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:icon="@drawable/ic_underline"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
                     android:layout_margin="4dp"
                     android:minWidth="48dp"
                     android:layout_width="wrap_content"
@@ -63,8 +61,8 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnBullet"
-                    android:text="•"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:icon="@drawable/ic_list"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
                     android:layout_margin="4dp"
                     android:minWidth="48dp"
                     android:layout_width="wrap_content"
@@ -72,9 +70,8 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnHeading"
-                    android:text="H"
-                    android:textStyle="bold"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:icon="@drawable/ic_heading"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
                     android:layout_margin="4dp"
                     android:minWidth="48dp"
                     android:layout_width="wrap_content"
@@ -82,8 +79,8 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnColor"
-                    android:text="A"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:icon="@drawable/ic_color"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
                     android:layout_margin="4dp"
                     android:minWidth="48dp"
                     android:layout_width="wrap_content"
