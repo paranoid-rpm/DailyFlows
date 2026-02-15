@@ -1,14 +1,26 @@
 package com.example.dailyflows.ui.edit;
 
 import android.app.TimePickerDialog;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.content.Context;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
+import android.view.View;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.Toolbar;
 
+import com.google.android.material.chip.Chip;
 import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.slider.Slider;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textview.MaterialTextView;
@@ -34,15 +46,16 @@ public class EditTaskActivity extends BaseActivity {
     private TaskEntity task;
     private Vibrator vibrator;
 
+    private Toolbar toolbar;
     private TextInputEditText etTitle;
     private TextInputEditText etNote;
-    private MaterialTextView tvWhen;
-    private MaterialTextView tvPriority;
-    private Slider sliderPriority;
+    private ExtendedFloatingActionButton fabSave;
 
     private long pickedDayMillis = 0;
     private int pickedHour = 9;
     private int pickedMinute = 0;
+    private int currentPriority = 0;
+    private String selectedTag = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -52,24 +65,26 @@ public class EditTaskActivity extends BaseActivity {
         repo = new TaskRepository(this);
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
+        toolbar = findViewById(R.id.toolbar);
+        toolbar.setNavigationOnClickListener(v -> finish());
+
         etTitle = findViewById(R.id.etTitle);
         etNote = findViewById(R.id.etNote);
-        tvWhen = findViewById(R.id.tvWhen);
-        tvPriority = findViewById(R.id.tvPriority);
-        sliderPriority = findViewById(R.id.sliderPriority);
+        fabSave = findViewById(R.id.fabSave);
 
-        sliderPriority.addOnChangeListener((slider, value, fromUser) -> {
-            if (fromUser && vibrator != null) vibrator.vibrate(10);
-            tvPriority.setText(getPriorityEmoji((int) value) + " Приоритет: " + (int) value);
-        });
+        findViewById(R.id.btnBold).setOnClickListener(v -> applyStyle(Typeface.BOLD));
+        findViewById(R.id.btnItalic).setOnClickListener(v -> applyStyle(Typeface.ITALIC));
+        findViewById(R.id.btnUnderline).setOnClickListener(v -> applyUnderline());
+        findViewById(R.id.btnBullet).setOnClickListener(v -> insertBullet());
+        findViewById(R.id.btnHeading).setOnClickListener(v -> applyHeading());
+        findViewById(R.id.btnColor).setOnClickListener(v -> showColorPicker());
 
-        findViewById(R.id.btnDateTime).setOnClickListener(v -> {
+        fabSave.setOnClickListener(v -> {
             haptic();
-            pickDateTime();
-        });
-        findViewById(R.id.btnSave).setOnClickListener(v -> {
-            haptic();
-            save();
+            fabSave.animate().scaleX(0.9f).scaleY(0.9f).setDuration(100).withEndAction(() -> {
+                fabSave.animate().scaleX(1f).scaleY(1f).setDuration(100).start();
+            }).start();
+            showSaveDialog();
         });
 
         String id = getIntent().getStringExtra(EXTRA_TASK_ID);
@@ -99,25 +114,66 @@ public class EditTaskActivity extends BaseActivity {
         }
 
         task = t;
-
         etTitle.setText(t.title);
         etNote.setText(t.note != null ? t.note : "");
-        sliderPriority.setValue(t.priority);
-        tvPriority.setText(getPriorityEmoji(t.priority) + " Приоритет: " + t.priority);
+        currentPriority = t.priority;
 
         if (t.dueAtMillis > 0) {
-            tvWhen.setText(DateTimeUtil.formatDate(t.dueAtMillis) + " " + DateTimeUtil.formatTime(t.dueAtMillis));
             Calendar c = Calendar.getInstance();
             c.setTimeInMillis(t.dueAtMillis);
             pickedDayMillis = DateTimeUtil.atStartOfDay(t.dueAtMillis);
             pickedHour = c.get(Calendar.HOUR_OF_DAY);
             pickedMinute = c.get(Calendar.MINUTE);
-        } else {
-            tvWhen.setText("Не задано");
         }
     }
 
-    private void pickDateTime() {
+    private void showSaveDialog() {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_save_note, null);
+
+        MaterialTextView tvDateTime = dialogView.findViewById(R.id.tvSelectedDateTime);
+        MaterialTextView tvPriority = dialogView.findViewById(R.id.tvPriorityLabel);
+        Slider slider = dialogView.findViewById(R.id.sliderPriority);
+        Chip chipWork = dialogView.findViewById(R.id.chipWork);
+        Chip chipPersonal = dialogView.findViewById(R.id.chipPersonal);
+        Chip chipIdeas = dialogView.findViewById(R.id.chipIdeas);
+
+        slider.setValue(currentPriority);
+        tvPriority.setText(getPriorityEmoji(currentPriority) + " Приоритет: " + currentPriority);
+
+        if (pickedDayMillis > 0) {
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(pickedDayMillis);
+            c.set(Calendar.HOUR_OF_DAY, pickedHour);
+            c.set(Calendar.MINUTE, pickedMinute);
+            tvDateTime.setText(DateTimeUtil.formatDate(c.getTimeInMillis()) + " " + DateTimeUtil.formatTime(c.getTimeInMillis()));
+        }
+
+        slider.addOnChangeListener((sl, value, fromUser) -> {
+            if (fromUser) haptic();
+            tvPriority.setText(getPriorityEmoji((int) value) + " Приоритет: " + (int) value);
+        });
+
+        dialogView.findViewById(R.id.btnPickDateTime).setOnClickListener(v -> pickDateTime(tvDateTime));
+
+        chipWork.setOnCheckedChangeListener((button, checked) -> { if (checked) selectedTag = "Работа"; });
+        chipPersonal.setOnCheckedChangeListener((button, checked) -> { if (checked) selectedTag = "Личное"; });
+        chipIdeas.setOnCheckedChangeListener((button, checked) -> { if (checked) selectedTag = "Идеи"; });
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create();
+
+        dialogView.findViewById(R.id.btnCancel).setOnClickListener(v -> dialog.dismiss());
+        dialogView.findViewById(R.id.btnSaveDialog).setOnClickListener(v -> {
+            currentPriority = (int) slider.getValue();
+            save();
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    private void pickDateTime(MaterialTextView tvDateTime) {
         long initial = pickedDayMillis > 0 ? pickedDayMillis : System.currentTimeMillis();
 
         MaterialDatePicker<Long> picker = MaterialDatePicker.Builder.datePicker()
@@ -143,7 +199,7 @@ public class EditTaskActivity extends BaseActivity {
                         c.set(Calendar.MILLISECOND, 0);
 
                         task.dueAtMillis = c.getTimeInMillis();
-                        tvWhen.setText(DateTimeUtil.formatDate(task.dueAtMillis) + " " + DateTimeUtil.formatTime(task.dueAtMillis));
+                        tvDateTime.setText(DateTimeUtil.formatDate(task.dueAtMillis) + " " + DateTimeUtil.formatTime(task.dueAtMillis));
                         haptic();
                     },
                     pickedHour,
@@ -159,13 +215,17 @@ public class EditTaskActivity extends BaseActivity {
     private void save() {
         String title = etTitle.getText() != null ? etTitle.getText().toString().trim() : "";
         if (title.isEmpty()) {
-            etTitle.setError("Введите название");
+            etTitle.setError("Введите заголовок");
             return;
         }
 
         task.title = title;
         task.note = etNote.getText() != null ? etNote.getText().toString() : "";
-        task.priority = (int) sliderPriority.getValue();
+        task.priority = currentPriority;
+
+        if (selectedTag != null && !task.note.contains("#")) {
+            task.note = "#" + selectedTag + "\n" + task.note;
+        }
 
         Log.d(TAG, "Saving task: " + task.title + ", id: " + task.id);
 
@@ -173,6 +233,68 @@ public class EditTaskActivity extends BaseActivity {
             Log.d(TAG, "Task saved, finishing activity");
             finish();
         });
+    }
+
+    private void applyStyle(int style) {
+        int start = etNote.getSelectionStart();
+        int end = etNote.getSelectionEnd();
+        if (start >= end) return;
+
+        SpannableString spannable = new SpannableString(etNote.getText());
+        spannable.setSpan(new StyleSpan(style), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        etNote.setText(spannable);
+        etNote.setSelection(end);
+        haptic();
+    }
+
+    private void applyUnderline() {
+        int start = etNote.getSelectionStart();
+        int end = etNote.getSelectionEnd();
+        if (start >= end) return;
+
+        SpannableString spannable = new SpannableString(etNote.getText());
+        spannable.setSpan(new UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        etNote.setText(spannable);
+        etNote.setSelection(end);
+        haptic();
+    }
+
+    private void insertBullet() {
+        int cursor = etNote.getSelectionStart();
+        etNote.getText().insert(cursor, "• ");
+        haptic();
+    }
+
+    private void applyHeading() {
+        int start = etNote.getSelectionStart();
+        int end = etNote.getSelectionEnd();
+        if (start >= end) return;
+
+        SpannableString spannable = new SpannableString(etNote.getText());
+        spannable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        etNote.setText(spannable);
+        etNote.setSelection(end);
+        haptic();
+    }
+
+    private void showColorPicker() {
+        int start = etNote.getSelectionStart();
+        int end = etNote.getSelectionEnd();
+        if (start >= end) return;
+
+        String[] colors = {"Красный", "Синий", "Зелёный", "Оранжевый", "Фиолетовый"};
+        int[] colorValues = {Color.RED, Color.BLUE, Color.GREEN, Color.rgb(255, 140, 0), Color.MAGENTA};
+
+        new AlertDialog.Builder(this)
+                .setTitle("Цвет текста")
+                .setItems(colors, (dialog, which) -> {
+                    SpannableString spannable = new SpannableString(etNote.getText());
+                    spannable.setSpan(new ForegroundColorSpan(colorValues[which]), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    etNote.setText(spannable);
+                    etNote.setSelection(end);
+                    haptic();
+                })
+                .show();
     }
 
     private void haptic() {
