@@ -7,8 +7,10 @@ import android.os.Bundle;
 import android.os.Vibrator;
 import android.content.Context;
 import android.text.Editable;
+import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
@@ -135,7 +137,15 @@ public class EditTaskActivity extends BaseActivity {
 
         task = t;
         etTitle.setText(t.title);
-        etNote.setText(t.note != null ? t.note : "");
+        
+        // Load HTML formatted text
+        if (t.note != null && !t.note.isEmpty()) {
+            Spanned spanned = Html.fromHtml(t.note, Html.FROM_HTML_MODE_COMPACT);
+            etNote.setText(spanned);
+        } else {
+            etNote.setText("");
+        }
+        
         currentPriority = t.priority;
 
         if (t.dueAtMillis > 0) {
@@ -240,14 +250,21 @@ public class EditTaskActivity extends BaseActivity {
         }
 
         task.title = title;
-        task.note = etNote.getText() != null ? etNote.getText().toString() : "";
-        task.priority = currentPriority;
-
-        if (selectedTag != null && !task.note.contains("#")) {
-            task.note = "#" + selectedTag + "\n" + task.note;
+        
+        // Save as HTML to preserve formatting
+        Editable editable = etNote.getText();
+        if (editable != null) {
+            String html = Html.toHtml((Spanned) editable, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE);
+            task.note = html;
+        } else {
+            task.note = "";
         }
 
-        Log.d(TAG, "Saving task: " + task.title + ", id: " + task.id);
+        if (selectedTag != null && !task.note.contains("#")) {
+            task.note = "<p><b>#" + selectedTag + "</b></p>" + task.note;
+        }
+
+        Log.d(TAG, "Saving task: " + task.title + ", id: " + task.id + ", note length: " + task.note.length());
 
         repo.upsert(task, this, () -> {
             Log.d(TAG, "Task saved, finishing activity");
@@ -406,21 +423,40 @@ public class EditTaskActivity extends BaseActivity {
             return;
         }
 
-        String[] colors = {"Красный", "Синий", "Зелёный", "Оранжевый", "Фиолетовый"};
-        int[] colorValues = {Color.RED, Color.BLUE, Color.GREEN, Color.rgb(255, 140, 0), Color.MAGENTA};
+        View colorView = getLayoutInflater().inflate(R.layout.dialog_color_picker, null);
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(colorView)
+                .create();
 
-        new AlertDialog.Builder(this)
-                .setTitle("Цвет текста")
-                .setItems(colors, (dialog, which) -> {
-                    try {
-                        editable.setSpan(new ForegroundColorSpan(colorValues[which]), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        Toast.makeText(this, "Цвет применён: " + colors[which], Toast.LENGTH_SHORT).show();
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error applying color", e);
-                        Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .show();
+        int[] colorIds = {R.id.colorRed, R.id.colorPink, R.id.colorPurple, R.id.colorDeepPurple,
+                R.id.colorIndigo, R.id.colorBlue, R.id.colorCyan, R.id.colorTeal,
+                R.id.colorGreen, R.id.colorLightGreen, R.id.colorYellow, R.id.colorOrange,
+                R.id.colorDeepOrange, R.id.colorBrown, R.id.colorGrey};
+        
+        int[] colors = {Color.parseColor("#F44336"), Color.parseColor("#E91E63"), 
+                Color.parseColor("#9C27B0"), Color.parseColor("#673AB7"),
+                Color.parseColor("#3F51B5"), Color.parseColor("#2196F3"),
+                Color.parseColor("#00BCD4"), Color.parseColor("#009688"),
+                Color.parseColor("#4CAF50"), Color.parseColor("#8BC34A"),
+                Color.parseColor("#FFEB3B"), Color.parseColor("#FF9800"),
+                Color.parseColor("#FF5722"), Color.parseColor("#795548"),
+                Color.parseColor("#9E9E9E")};
+
+        for (int i = 0; i < colorIds.length; i++) {
+            final int color = colors[i];
+            colorView.findViewById(colorIds[i]).setOnClickListener(v -> {
+                try {
+                    editable.setSpan(new ForegroundColorSpan(color), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    Toast.makeText(this, "Цвет применён", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                } catch (Exception e) {
+                    Log.e(TAG, "Error applying color", e);
+                    Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        dialog.show();
     }
 
     private void haptic() {

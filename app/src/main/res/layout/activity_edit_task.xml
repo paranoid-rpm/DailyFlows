@@ -19,77 +19,6 @@
             app:navigationIcon="@drawable/ic_back"
             app:title="Редактор заметки" />
 
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:scrollbars="none"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:paddingBottom="8dp">
-
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnBold"
-                    app:icon="@drawable/ic_bold"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_margin="4dp"
-                    android:minWidth="48dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnItalic"
-                    app:icon="@drawable/ic_italic"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_margin="4dp"
-                    android:minWidth="48dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnUnderline"
-                    app:icon="@drawable/ic_underline"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_margin="4dp"
-                    android:minWidth="48dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnBullet"
-                    app:icon="@drawable/ic_list"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_margin="4dp"
-                    android:minWidth="48dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnHeading"
-                    app:icon="@drawable/ic_heading"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_margin="4dp"
-                    android:minWidth="48dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnColor"
-                    app:icon="@drawable/ic_color"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-                    android:layout_margin="4dp"
-                    android:minWidth="48dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"/>
-
-            </LinearLayout>
-
-        </HorizontalScrollView>
-
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -121,6 +50,102 @@
                     android:layout_height="wrap_content"/>
 
             </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Formatting toolbar card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:text="🛠️ Инструменты форматирования"
+                        android:textStyle="bold"
+                        android:textSize="14sp"
+                        android:layout_marginBottom="8dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnBold"
+                            app:icon="@drawable/ic_bold"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnItalic"
+                            app:icon="@drawable/ic_italic"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnUnderline"
+                            app:icon="@drawable/ic_underline"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"/>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnBullet"
+                            app:icon="@drawable/ic_list"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnHeading"
+                            app:icon="@drawable/ic_heading"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnColor"
+                            app:icon="@drawable/ic_color"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                            android:layout_margin="4dp"
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"/>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_marginTop="16dp"
