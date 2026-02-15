@@ -11,7 +11,7 @@
         android:layout_height="wrap_content">
 
         <com.google.android.material.textview.MaterialTextView
-            android:text="🎨 Выберите цвет текста"
+            android:text="Выберите цвет текста"
             android:textSize="20sp"
             android:textStyle="bold"
             android:gravity="center"

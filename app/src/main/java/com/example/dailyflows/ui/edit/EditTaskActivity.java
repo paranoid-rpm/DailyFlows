@@ -140,8 +140,14 @@ public class EditTaskActivity extends BaseActivity {
         
         // Load HTML formatted text
         if (t.note != null && !t.note.isEmpty()) {
-            Spanned spanned = Html.fromHtml(t.note, Html.FROM_HTML_MODE_COMPACT);
-            etNote.setText(spanned);
+            try {
+                Spanned spanned = Html.fromHtml(t.note, Html.FROM_HTML_MODE_COMPACT);
+                etNote.setText(spanned);
+                Log.d(TAG, "Loaded note with formatting, length: " + t.note.length());
+            } catch (Exception e) {
+                Log.e(TAG, "Error loading HTML", e);
+                etNote.setText(t.note);
+            }
         } else {
             etNote.setText("");
         }
@@ -196,8 +202,8 @@ public class EditTaskActivity extends BaseActivity {
         dialogView.findViewById(R.id.btnCancel).setOnClickListener(v -> dialog.dismiss());
         dialogView.findViewById(R.id.btnSaveDialog).setOnClickListener(v -> {
             currentPriority = (int) slider.getValue();
-            save();
             dialog.dismiss();
+            save();
         });
 
         dialog.show();
@@ -250,25 +256,37 @@ public class EditTaskActivity extends BaseActivity {
         }
 
         task.title = title;
+        task.priority = currentPriority;
         
         // Save as HTML to preserve formatting
         Editable editable = etNote.getText();
-        if (editable != null) {
-            String html = Html.toHtml((Spanned) editable, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE);
-            task.note = html;
+        if (editable != null && editable.length() > 0) {
+            try {
+                // Convert Spannable to HTML
+                String html = Html.toHtml((Spanned) editable, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE);
+                task.note = html;
+                Log.d(TAG, "Converted to HTML, length: " + html.length());
+            } catch (Exception e) {
+                Log.e(TAG, "Error converting to HTML", e);
+                task.note = editable.toString();
+            }
         } else {
             task.note = "";
         }
 
-        if (selectedTag != null && !task.note.contains("#")) {
+        // Add tag if selected
+        if (selectedTag != null && !task.note.contains(selectedTag)) {
             task.note = "<p><b>#" + selectedTag + "</b></p>" + task.note;
         }
 
-        Log.d(TAG, "Saving task: " + task.title + ", id: " + task.id + ", note length: " + task.note.length());
+        Log.d(TAG, "Saving task: title='" + task.title + "', id='" + task.id + "', note_length=" + task.note.length() + ", priority=" + task.priority);
 
         repo.upsert(task, this, () -> {
-            Log.d(TAG, "Task saved, finishing activity");
-            finish();
+            Log.d(TAG, "Task saved successfully, closing activity");
+            runOnUiThread(() -> {
+                Toast.makeText(EditTaskActivity.this, "Заметка сохранена!", Toast.LENGTH_SHORT).show();
+                finish();
+            });
         });
     }
 
