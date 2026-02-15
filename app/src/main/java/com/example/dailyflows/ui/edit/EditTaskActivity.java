@@ -141,15 +141,23 @@ public class EditTaskActivity extends BaseActivity {
         // Load HTML formatted text
         if (t.note != null && !t.note.isEmpty()) {
             try {
-                Spanned spanned = Html.fromHtml(t.note, Html.FROM_HTML_MODE_COMPACT);
-                etNote.setText(spanned);
-                Log.d(TAG, "Loaded note with formatting, length: " + t.note.length());
+                // Check if note contains HTML tags
+                if (t.note.contains("<") && t.note.contains(">")) {
+                    Spanned spanned = Html.fromHtml(t.note, Html.FROM_HTML_MODE_COMPACT);
+                    etNote.setText(spanned);
+                    Log.d(TAG, "Loaded HTML note, original length: " + t.note.length() + ", rendered length: " + spanned.length());
+                } else {
+                    // Plain text
+                    etNote.setText(t.note);
+                    Log.d(TAG, "Loaded plain text note, length: " + t.note.length());
+                }
             } catch (Exception e) {
-                Log.e(TAG, "Error loading HTML", e);
+                Log.e(TAG, "Error loading note", e);
                 etNote.setText(t.note);
             }
         } else {
             etNote.setText("");
+            Log.d(TAG, "Note is empty");
         }
         
         currentPriority = t.priority;
@@ -249,6 +257,8 @@ public class EditTaskActivity extends BaseActivity {
     }
 
     private void save() {
+        Log.d(TAG, "=== SAVE START ===");
+        
         String title = etTitle.getText() != null ? etTitle.getText().toString().trim() : "";
         if (title.isEmpty()) {
             etTitle.setError("Введите заголовок");
@@ -258,31 +268,38 @@ public class EditTaskActivity extends BaseActivity {
         task.title = title;
         task.priority = currentPriority;
         
-        // Save as HTML to preserve formatting
+        Log.d(TAG, "Getting editable from etNote...");
         Editable editable = etNote.getText();
+        Log.d(TAG, "Editable: " + (editable != null ? "not null, length=" + editable.length() : "NULL"));
+        
+        // Save as HTML to preserve formatting
         if (editable != null && editable.length() > 0) {
             try {
+                Log.d(TAG, "Converting Spannable to HTML...");
                 // Convert Spannable to HTML
                 String html = Html.toHtml((Spanned) editable, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE);
+                Log.d(TAG, "HTML conversion successful! Length: " + html.length());
+                Log.d(TAG, "HTML preview (first 200 chars): " + html.substring(0, Math.min(200, html.length())));
                 task.note = html;
-                Log.d(TAG, "Converted to HTML, length: " + html.length());
             } catch (Exception e) {
-                Log.e(TAG, "Error converting to HTML", e);
+                Log.e(TAG, "ERROR converting to HTML!", e);
                 task.note = editable.toString();
             }
         } else {
+            Log.d(TAG, "Editable is null or empty, setting note to empty string");
             task.note = "";
         }
 
         // Add tag if selected
         if (selectedTag != null && !task.note.contains(selectedTag)) {
+            Log.d(TAG, "Adding tag: " + selectedTag);
             task.note = "<p><b>#" + selectedTag + "</b></p>" + task.note;
         }
 
-        Log.d(TAG, "Saving task: title='" + task.title + "', id='" + task.id + "', note_length=" + task.note.length() + ", priority=" + task.priority);
+        Log.d(TAG, "Final save - title: '" + task.title + "', id: '" + task.id + "', note_length: " + task.note.length() + ", priority: " + task.priority);
 
         repo.upsert(task, this, () -> {
-            Log.d(TAG, "Task saved successfully, closing activity");
+            Log.d(TAG, "=== SAVE SUCCESS ===");
             runOnUiThread(() -> {
                 Toast.makeText(EditTaskActivity.this, "Заметка сохранена!", Toast.LENGTH_SHORT).show();
                 finish();
