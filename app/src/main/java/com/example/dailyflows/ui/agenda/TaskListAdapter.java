@@ -1,6 +1,7 @@
 package com.example.dailyflows.ui.agenda;
 
 import android.graphics.Color;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,11 +60,29 @@ public class TaskListAdapter extends ListAdapter<TaskEntity, TaskListAdapter.VH>
         vh.tvTime.setText(DateTimeUtil.formatTime(task.dueAtMillis));
         vh.cbDone.setChecked(task.done);
 
-        // Show note preview
+        // Show note preview - parse HTML to plain text
         if (task.note != null && !task.note.isEmpty()) {
             vh.tvNote.setVisibility(View.VISIBLE);
-            String preview = task.note.length() > 50 ? task.note.substring(0, 50) + "..." : task.note;
-            vh.tvNote.setText(preview.replace("\n", " "));
+            
+            // Convert HTML to plain text for preview
+            String plainText;
+            if (task.note.contains("<") && task.note.contains(">")) {
+                // Parse HTML and extract plain text
+                try {
+                    plainText = Html.fromHtml(task.note, Html.FROM_HTML_MODE_COMPACT).toString();
+                } catch (Exception e) {
+                    plainText = task.note;
+                }
+            } else {
+                plainText = task.note;
+            }
+            
+            // Remove excessive whitespace and newlines
+            plainText = plainText.replaceAll("\\s+", " ").trim();
+            
+            // Truncate to 50 characters
+            String preview = plainText.length() > 50 ? plainText.substring(0, 50) + "..." : plainText;
+            vh.tvNote.setText(preview);
         } else {
             vh.tvNote.setVisibility(View.GONE);
         }
