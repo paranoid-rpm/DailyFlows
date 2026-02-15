@@ -5,6 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <com.google.android.material.textview.MaterialTextView
+        android:text="Резервные копии"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnExport"
         android:text="Экспорт резервной копии (JSON)"
@@ -25,4 +33,43 @@
         android:text="Статус: —"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
+
+    <View
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="12dp"
+        android:background="?android:attr/listDivider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"/>
+
+    <com.google.android.material.textview.MaterialTextView
+        android:text="Внешний вид"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnTheme"
+        android:text="Тема приложения"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnStyle"
+        android:text="Стиль интерфейса"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_marginTop="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnFontScale"
+        android:text="Размер шрифта"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_marginTop="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
 </LinearLayout>

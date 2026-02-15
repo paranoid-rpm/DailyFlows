@@ -150,7 +150,7 @@ public class EditTaskActivity extends AppCompatActivity {
         task.note = etNote.getText() != null ? etNote.getText().toString() : "";
         task.priority = (int) sliderPriority.getValue();
 
-        repo.upsert(task, this);
-        finish();
+        // Wait for DB write to complete before closing
+        repo.upsert(task, this, () -> runOnUiThread(this::finish));
     }
 }

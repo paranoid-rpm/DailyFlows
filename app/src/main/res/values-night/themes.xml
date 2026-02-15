@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Standard night theme -->
     <style name="Theme.DailyFlow" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/df_primary_night</item>
         <item name="colorPrimaryVariant">@color/df_primary_variant_night</item>
@@ -8,6 +9,35 @@
 
         <item name="android:statusBarColor" tools:targetApi="l">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/black</item>
+    </style>
+
+    <!-- Apple Glass night: darker transparency -->
+    <style name="Theme.DailyFlow.AppleGlass" parent="Theme.DailyFlow">
+        <item name="materialCardViewStyle">@style/Widget.DailyFlow.Card.GlassNight</item>
+    </style>
+
+    <style name="Widget.DailyFlow.Card.GlassNight" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">20dp</item>
+        <item name="cardBackgroundColor">#55000000</item>
+        <item name="cardElevation">8dp</item>
+    </style>
+
+    <!-- Pixel Minimalism night -->
+    <style name="Theme.DailyFlow.PixelMin" parent="Theme.DailyFlow">
+        <item name="materialCardViewStyle">@style/Widget.DailyFlow.Card.Pixel</item>
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.DailyFlow.Pixel</item>
+    </style>
+
+    <style name="Widget.DailyFlow.Card.Pixel" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">4dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="ShapeAppearance.DailyFlow.Pixel" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSize">4dp</item>
     </style>
 
 </resources>

@@ -30,7 +30,7 @@ public class TaskRepository {
         return db.taskDao().observeOpen();
     }
 
-    public void upsert(TaskEntity task, Context context) {
+    public void upsert(TaskEntity task, Context context, Runnable onComplete) {
         io.execute(() -> {
             if (task.id == null) task.id = UUID.randomUUID().toString();
 
@@ -45,6 +45,8 @@ public class TaskRepository {
             } else {
                 NotificationUtil.cancelReminderWork(context, task.id);
             }
+
+            if (onComplete != null) onComplete.run();
         });
     }
 
