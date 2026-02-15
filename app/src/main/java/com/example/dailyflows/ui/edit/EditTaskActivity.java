@@ -9,8 +9,8 @@ import android.content.Context;
 import android.text.Editable;
 import android.text.Html;
 import android.text.Spannable;
-import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
@@ -29,7 +29,9 @@ import com.google.android.material.slider.Slider;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textview.MaterialTextView;
 
+import java.util.ArrayDeque;
 import java.util.Calendar;
+import java.util.Deque;
 import java.util.UUID;
 
 import com.example.dailyflows.R;
@@ -61,6 +63,10 @@ public class EditTaskActivity extends BaseActivity {
     private int currentPriority = 0;
     private String selectedTag = null;
 
+    // Simple undo stack (stores HTML snapshots)
+    private final Deque<String> undoStack = new ArrayDeque<>();
+    private boolean isUndoing = false;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,6 +81,34 @@ public class EditTaskActivity extends BaseActivity {
         etTitle = findViewById(R.id.etTitle);
         etNote = findViewById(R.id.etNote);
         fabSave = findViewById(R.id.fabSave);
+
+        // Track changes for undo (store previous state as HTML)
+        etNote.addTextChangedListener(new TextWatcher() {
+            private String beforeHtml = "";
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                if (isUndoing) return;
+                beforeHtml = toHtml(etNote.getText());
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (isUndoing) return;
+                // push snapshot only if changed
+                String nowHtml = toHtml(s);
+                if (!nowHtml.equals(beforeHtml)) {
+                    if (undoStack.size() > 50) {
+                        // keep memory sane
+                        while (undoStack.size() > 40) undoStack.removeFirst();
+                    }
+                    undoStack.addLast(beforeHtml);
+                }
+            }
+        });
 
         findViewById(R.id.btnBold).setOnClickListener(v -> {
             haptic();
@@ -99,6 +133,10 @@ public class EditTaskActivity extends BaseActivity {
         findViewById(R.id.btnColor).setOnClickListener(v -> {
             haptic();
             showColorPicker();
+        });
+        findViewById(R.id.btnUndo).setOnClickListener(v -> {
+            haptic();
+            undo();
         });
 
         fabSave.setOnClickListener(v -> {
@@ -129,6 +167,34 @@ public class EditTaskActivity extends BaseActivity {
         }
     }
 
+    private String toHtml(Editable editable) {
+        if (editable == null || editable.length() == 0) return "";
+        try {
+            return Html.toHtml((Spanned) editable, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE);
+        } catch (Exception e) {
+            return editable.toString();
+        }
+    }
+
+    private void undo() {
+        if (undoStack.isEmpty()) {
+            Toast.makeText(this, "Нечего отменять", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String prevHtml = undoStack.removeLast();
+        isUndoing = true;
+        try {
+            Spanned sp = Html.fromHtml(prevHtml, Html.FROM_HTML_MODE_COMPACT);
+            etNote.setText(sp);
+            // Move cursor to end for simplicity
+            etNote.setSelection(etNote.getText() != null ? etNote.getText().length() : 0);
+        } catch (Exception e) {
+            etNote.setText(prevHtml);
+        } finally {
+            isUndoing = false;
+        }
+    }
+
     private void bind(TaskEntity t) {
         if (t == null) {
             finish();
@@ -137,17 +203,18 @@ public class EditTaskActivity extends BaseActivity {
 
         task = t;
         etTitle.setText(t.title);
-        
+
+        // reset undo stack on bind
+        undoStack.clear();
+
         // Load HTML formatted text
         if (t.note != null && !t.note.isEmpty()) {
             try {
-                // Check if note contains HTML tags
                 if (t.note.contains("<") && t.note.contains(">")) {
                     Spanned spanned = Html.fromHtml(t.note, Html.FROM_HTML_MODE_COMPACT);
                     etNote.setText(spanned);
                     Log.d(TAG, "Loaded HTML note, original length: " + t.note.length() + ", rendered length: " + spanned.length());
                 } else {
-                    // Plain text
                     etNote.setText(t.note);
                     Log.d(TAG, "Loaded plain text note, length: " + t.note.length());
                 }
@@ -159,7 +226,7 @@ public class EditTaskActivity extends BaseActivity {
             etNote.setText("");
             Log.d(TAG, "Note is empty");
         }
-        
+
         currentPriority = t.priority;
 
         if (t.dueAtMillis > 0) {
@@ -170,6 +237,8 @@ public class EditTaskActivity extends BaseActivity {
             pickedMinute = c.get(Calendar.MINUTE);
         }
     }
+
+    // (rest unchanged) - keep existing methods
 
     private void showSaveDialog() {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_save_note, null);
@@ -258,7 +327,7 @@ public class EditTaskActivity extends BaseActivity {
 
     private void save() {
         Log.d(TAG, "=== SAVE START ===");
-        
+
         String title = etTitle.getText() != null ? etTitle.getText().toString().trim() : "";
         if (title.isEmpty()) {
             etTitle.setError("Введите заголовок");
@@ -267,32 +336,16 @@ public class EditTaskActivity extends BaseActivity {
 
         task.title = title;
         task.priority = currentPriority;
-        
-        Log.d(TAG, "Getting editable from etNote...");
+
         Editable editable = etNote.getText();
-        Log.d(TAG, "Editable: " + (editable != null ? "not null, length=" + editable.length() : "NULL"));
-        
-        // Save as HTML to preserve formatting
+
         if (editable != null && editable.length() > 0) {
-            try {
-                Log.d(TAG, "Converting Spannable to HTML...");
-                // Convert Spannable to HTML
-                String html = Html.toHtml((Spanned) editable, Html.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE);
-                Log.d(TAG, "HTML conversion successful! Length: " + html.length());
-                Log.d(TAG, "HTML preview (first 200 chars): " + html.substring(0, Math.min(200, html.length())));
-                task.note = html;
-            } catch (Exception e) {
-                Log.e(TAG, "ERROR converting to HTML!", e);
-                task.note = editable.toString();
-            }
+            task.note = toHtml(editable);
         } else {
-            Log.d(TAG, "Editable is null or empty, setting note to empty string");
             task.note = "";
         }
 
-        // Add tag if selected
         if (selectedTag != null && !task.note.contains(selectedTag)) {
-            Log.d(TAG, "Adding tag: " + selectedTag);
             task.note = "<p><b>#" + selectedTag + "</b></p>" + task.note;
         }
 
@@ -310,15 +363,8 @@ public class EditTaskActivity extends BaseActivity {
     private void applyBold() {
         int start = etNote.getSelectionStart();
         int end = etNote.getSelectionEnd();
-        
-        Log.d(TAG, "applyBold: start=" + start + ", end=" + end);
-        
-        if (start < 0 || end < 0) {
-            Toast.makeText(this, "Выделите текст для форматирования", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        
-        if (start >= end) {
+
+        if (start < 0 || end < 0 || start >= end) {
             Toast.makeText(this, "Выделите текст для форматирования", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -329,21 +375,13 @@ public class EditTaskActivity extends BaseActivity {
             return;
         }
 
-        try {
-            editable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            Toast.makeText(this, "Жирный текст применён", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Log.e(TAG, "Error applying bold", e);
-            Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
+        editable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
     private void applyItalic() {
         int start = etNote.getSelectionStart();
         int end = etNote.getSelectionEnd();
-        
-        Log.d(TAG, "applyItalic: start=" + start + ", end=" + end);
-        
+
         if (start < 0 || end < 0 || start >= end) {
             Toast.makeText(this, "Выделите текст для форматирования", Toast.LENGTH_SHORT).show();
             return;
@@ -355,21 +393,13 @@ public class EditTaskActivity extends BaseActivity {
             return;
         }
 
-        try {
-            editable.setSpan(new StyleSpan(Typeface.ITALIC), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            Toast.makeText(this, "Курсив применён", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Log.e(TAG, "Error applying italic", e);
-            Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
+        editable.setSpan(new StyleSpan(Typeface.ITALIC), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
     private void applyUnderline() {
         int start = etNote.getSelectionStart();
         int end = etNote.getSelectionEnd();
-        
-        Log.d(TAG, "applyUnderline: start=" + start + ", end=" + end);
-        
+
         if (start < 0 || end < 0 || start >= end) {
             Toast.makeText(this, "Выделите текст для форматирования", Toast.LENGTH_SHORT).show();
             return;
@@ -381,46 +411,28 @@ public class EditTaskActivity extends BaseActivity {
             return;
         }
 
-        try {
-            editable.setSpan(new UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            Toast.makeText(this, "Подчёркивание применено", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Log.e(TAG, "Error applying underline", e);
-            Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
+        editable.setSpan(new UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
     private void insertBullet() {
         int cursor = etNote.getSelectionStart();
-        Log.d(TAG, "insertBullet: cursor=" + cursor);
-        
+
         if (cursor < 0) {
             Toast.makeText(this, "Поставьте курсор", Toast.LENGTH_SHORT).show();
             return;
         }
 
         Editable editable = etNote.getText();
-        if (editable == null) {
-            Toast.makeText(this, "Ошибка", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        if (editable == null) return;
 
-        try {
-            editable.insert(cursor, "• ");
-            etNote.setSelection(cursor + 2);
-            Toast.makeText(this, "Маркер добавлен", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Log.e(TAG, "Error inserting bullet", e);
-            Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
+        editable.insert(cursor, "• ");
+        etNote.setSelection(cursor + 2);
     }
 
     private void applyHeading() {
         int start = etNote.getSelectionStart();
         int end = etNote.getSelectionEnd();
-        
-        Log.d(TAG, "applyHeading: start=" + start + ", end=" + end);
-        
+
         if (start < 0 || end < 0 || start >= end) {
             Toast.makeText(this, "Выделите текст для заголовка", Toast.LENGTH_SHORT).show();
             return;
@@ -432,21 +444,13 @@ public class EditTaskActivity extends BaseActivity {
             return;
         }
 
-        try {
-            editable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            Toast.makeText(this, "Заголовок применён", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Log.e(TAG, "Error applying heading", e);
-            Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
+        editable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
     private void showColorPicker() {
         int start = etNote.getSelectionStart();
         int end = etNote.getSelectionEnd();
-        
-        Log.d(TAG, "showColorPicker: start=" + start + ", end=" + end);
-        
+
         if (start < 0 || end < 0 || start >= end) {
             Toast.makeText(this, "Выделите текст для окраски", Toast.LENGTH_SHORT).show();
             return;
@@ -467,8 +471,8 @@ public class EditTaskActivity extends BaseActivity {
                 R.id.colorIndigo, R.id.colorBlue, R.id.colorCyan, R.id.colorTeal,
                 R.id.colorGreen, R.id.colorLightGreen, R.id.colorYellow, R.id.colorOrange,
                 R.id.colorDeepOrange, R.id.colorBrown, R.id.colorGrey};
-        
-        int[] colors = {Color.parseColor("#F44336"), Color.parseColor("#E91E63"), 
+
+        int[] colors = {Color.parseColor("#F44336"), Color.parseColor("#E91E63"),
                 Color.parseColor("#9C27B0"), Color.parseColor("#673AB7"),
                 Color.parseColor("#3F51B5"), Color.parseColor("#2196F3"),
                 Color.parseColor("#00BCD4"), Color.parseColor("#009688"),
@@ -480,14 +484,8 @@ public class EditTaskActivity extends BaseActivity {
         for (int i = 0; i < colorIds.length; i++) {
             final int color = colors[i];
             colorView.findViewById(colorIds[i]).setOnClickListener(v -> {
-                try {
-                    editable.setSpan(new ForegroundColorSpan(color), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    Toast.makeText(this, "Цвет применён", Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
-                } catch (Exception e) {
-                    Log.e(TAG, "Error applying color", e);
-                    Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
+                editable.setSpan(new ForegroundColorSpan(color), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                dialog.dismiss();
             });
         }
 
