@@ -14,7 +14,7 @@ import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -76,11 +76,11 @@ public class EditTaskActivity extends BaseActivity {
 
         findViewById(R.id.btnBold).setOnClickListener(v -> {
             haptic();
-            applyStyle(Typeface.BOLD);
+            applyBold();
         });
         findViewById(R.id.btnItalic).setOnClickListener(v -> {
             haptic();
-            applyStyle(Typeface.ITALIC);
+            applyItalic();
         });
         findViewById(R.id.btnUnderline).setOnClickListener(v -> {
             haptic();
@@ -255,63 +255,156 @@ public class EditTaskActivity extends BaseActivity {
         });
     }
 
-    private void applyStyle(int style) {
+    private void applyBold() {
         int start = etNote.getSelectionStart();
         int end = etNote.getSelectionEnd();
-        if (start < 0 || end < 0 || start >= end) return;
+        
+        Log.d(TAG, "applyBold: start=" + start + ", end=" + end);
+        
+        if (start < 0 || end < 0) {
+            Toast.makeText(this, "Выделите текст для форматирования", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        if (start >= end) {
+            Toast.makeText(this, "Выделите текст для форматирования", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         Editable editable = etNote.getText();
-        if (editable == null) return;
+        if (editable == null || editable.length() == 0) {
+            Toast.makeText(this, "Введите текст", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        SpannableStringBuilder builder = new SpannableStringBuilder(editable);
-        builder.setSpan(new StyleSpan(style), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        etNote.setText(builder);
-        etNote.setSelection(start, end);
+        try {
+            editable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            Toast.makeText(this, "Жирный текст применён", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error applying bold", e);
+            Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void applyItalic() {
+        int start = etNote.getSelectionStart();
+        int end = etNote.getSelectionEnd();
+        
+        Log.d(TAG, "applyItalic: start=" + start + ", end=" + end);
+        
+        if (start < 0 || end < 0 || start >= end) {
+            Toast.makeText(this, "Выделите текст для форматирования", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Editable editable = etNote.getText();
+        if (editable == null || editable.length() == 0) {
+            Toast.makeText(this, "Введите текст", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            editable.setSpan(new StyleSpan(Typeface.ITALIC), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            Toast.makeText(this, "Курсив применён", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error applying italic", e);
+            Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void applyUnderline() {
         int start = etNote.getSelectionStart();
         int end = etNote.getSelectionEnd();
-        if (start < 0 || end < 0 || start >= end) return;
+        
+        Log.d(TAG, "applyUnderline: start=" + start + ", end=" + end);
+        
+        if (start < 0 || end < 0 || start >= end) {
+            Toast.makeText(this, "Выделите текст для форматирования", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         Editable editable = etNote.getText();
-        if (editable == null) return;
+        if (editable == null || editable.length() == 0) {
+            Toast.makeText(this, "Введите текст", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        SpannableStringBuilder builder = new SpannableStringBuilder(editable);
-        builder.setSpan(new UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        etNote.setText(builder);
-        etNote.setSelection(start, end);
+        try {
+            editable.setSpan(new UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            Toast.makeText(this, "Подчёркивание применено", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error applying underline", e);
+            Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void insertBullet() {
         int cursor = etNote.getSelectionStart();
-        if (cursor < 0) return;
+        Log.d(TAG, "insertBullet: cursor=" + cursor);
+        
+        if (cursor < 0) {
+            Toast.makeText(this, "Поставьте курсор", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         Editable editable = etNote.getText();
-        if (editable == null) return;
+        if (editable == null) {
+            Toast.makeText(this, "Ошибка", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        editable.insert(cursor, "• ");
-        etNote.setSelection(cursor + 2);
+        try {
+            editable.insert(cursor, "• ");
+            etNote.setSelection(cursor + 2);
+            Toast.makeText(this, "Маркер добавлен", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error inserting bullet", e);
+            Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void applyHeading() {
         int start = etNote.getSelectionStart();
         int end = etNote.getSelectionEnd();
-        if (start < 0 || end < 0 || start >= end) return;
+        
+        Log.d(TAG, "applyHeading: start=" + start + ", end=" + end);
+        
+        if (start < 0 || end < 0 || start >= end) {
+            Toast.makeText(this, "Выделите текст для заголовка", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         Editable editable = etNote.getText();
-        if (editable == null) return;
+        if (editable == null || editable.length() == 0) {
+            Toast.makeText(this, "Введите текст", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        SpannableStringBuilder builder = new SpannableStringBuilder(editable);
-        builder.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        etNote.setText(builder);
-        etNote.setSelection(start, end);
+        try {
+            editable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            Toast.makeText(this, "Заголовок применён", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error applying heading", e);
+            Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showColorPicker() {
         int start = etNote.getSelectionStart();
         int end = etNote.getSelectionEnd();
-        if (start < 0 || end < 0 || start >= end) return;
+        
+        Log.d(TAG, "showColorPicker: start=" + start + ", end=" + end);
+        
+        if (start < 0 || end < 0 || start >= end) {
+            Toast.makeText(this, "Выделите текст для окраски", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Editable editable = etNote.getText();
+        if (editable == null || editable.length() == 0) {
+            Toast.makeText(this, "Введите текст", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         String[] colors = {"Красный", "Синий", "Зелёный", "Оранжевый", "Фиолетовый"};
         int[] colorValues = {Color.RED, Color.BLUE, Color.GREEN, Color.rgb(255, 140, 0), Color.MAGENTA};
@@ -319,13 +412,13 @@ public class EditTaskActivity extends BaseActivity {
         new AlertDialog.Builder(this)
                 .setTitle("Цвет текста")
                 .setItems(colors, (dialog, which) -> {
-                    Editable editable = etNote.getText();
-                    if (editable == null) return;
-
-                    SpannableStringBuilder builder = new SpannableStringBuilder(editable);
-                    builder.setSpan(new ForegroundColorSpan(colorValues[which]), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    etNote.setText(builder);
-                    etNote.setSelection(start, end);
+                    try {
+                        editable.setSpan(new ForegroundColorSpan(colorValues[which]), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        Toast.makeText(this, "Цвет применён: " + colors[which], Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error applying color", e);
+                        Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                 })
                 .show();
     }
