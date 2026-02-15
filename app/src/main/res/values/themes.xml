@@ -1,26 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Standard theme -->
     <style name="Theme.DailyFlow" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/df_primary</item>
         <item name="colorPrimaryVariant">@color/df_primary_variant</item>
         <item name="colorSecondary">@color/df_secondary</item>
         <item name="android:statusBarColor" tools:targetApi="l">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimations</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.MediumComponent</item>
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.App.SmallComponent</item>
     </style>
 
-    <!-- Apple Glass style -->
+    <style name="ShapeAppearance.App.MediumComponent" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">20dp</item>
+    </style>
+
+    <style name="ShapeAppearance.App.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <!-- Apple Glass -->
     <style name="Theme.DailyFlow.AppleGlass" parent="Theme.DailyFlow">
         <item name="materialCardViewStyle">@style/Widget.DailyFlow.Card.Glass</item>
-        <item name="android:windowContentTransitions">true</item>
     </style>
 
     <style name="Widget.DailyFlow.Card.Glass" parent="Widget.MaterialComponents.CardView">
-        <item name="cardCornerRadius">20dp</item>
-        <item name="cardBackgroundColor">#88FFFFFF</item>
-        <item name="cardElevation">12dp</item>
+        <item name="cardCornerRadius">24dp</item>
+        <item name="cardBackgroundColor">#CCFFFFFF</item>
+        <item name="cardElevation">16dp</item>
     </style>
 
     <!-- Pixel Minimalism -->
@@ -29,10 +39,10 @@
     </style>
 
     <style name="Widget.DailyFlow.Card.Pixel" parent="Widget.MaterialComponents.CardView">
-        <item name="cardCornerRadius">2dp</item>
+        <item name="cardCornerRadius">16dp</item>
         <item name="cardElevation">0dp</item>
         <item name="strokeWidth">2dp</item>
-        <item name="strokeColor">#000000</item>
+        <item name="strokeColor">?attr/colorPrimary</item>
     </style>
 
     <!-- Cyberpunk Neon -->
@@ -44,14 +54,15 @@
         <item name="colorSurface">@color/cyber_surface</item>
         <item name="materialCardViewStyle">@style/Widget.DailyFlow.Card.Cyberpunk</item>
         <item name="android:statusBarColor" tools:targetApi="l">@color/cyber_bg</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.MediumComponent</item>
     </style>
 
     <style name="Widget.DailyFlow.Card.Cyberpunk" parent="Widget.MaterialComponents.CardView">
-        <item name="cardCornerRadius">8dp</item>
+        <item name="cardCornerRadius">20dp</item>
         <item name="cardBackgroundColor">@color/cyber_surface</item>
-        <item name="strokeWidth">1dp</item>
+        <item name="strokeWidth">2dp</item>
         <item name="strokeColor">@color/cyber_primary</item>
-        <item name="cardElevation">8dp</item>
+        <item name="cardElevation">12dp</item>
     </style>
 
     <!-- Sunset Warm -->
@@ -63,12 +74,13 @@
         <item name="colorSurface">@color/sunset_surface</item>
         <item name="materialCardViewStyle">@style/Widget.DailyFlow.Card.Sunset</item>
         <item name="android:statusBarColor" tools:targetApi="l">@color/sunset_primary</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.MediumComponent</item>
     </style>
 
     <style name="Widget.DailyFlow.Card.Sunset" parent="Widget.MaterialComponents.CardView">
-        <item name="cardCornerRadius">16dp</item>
+        <item name="cardCornerRadius">24dp</item>
         <item name="cardBackgroundColor">#FFFFFFFF</item>
-        <item name="cardElevation">6dp</item>
+        <item name="cardElevation">8dp</item>
     </style>
 
     <!-- Ocean Deep -->
@@ -80,12 +92,13 @@
         <item name="colorSurface">@color/ocean_surface</item>
         <item name="materialCardViewStyle">@style/Widget.DailyFlow.Card.Ocean</item>
         <item name="android:statusBarColor" tools:targetApi="l">@color/ocean_primary</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.MediumComponent</item>
     </style>
 
     <style name="Widget.DailyFlow.Card.Ocean" parent="Widget.MaterialComponents.CardView">
-        <item name="cardCornerRadius">24dp</item>
+        <item name="cardCornerRadius">28dp</item>
         <item name="cardBackgroundColor">#FFFFFF</item>
-        <item name="cardElevation">4dp</item>
+        <item name="cardElevation">6dp</item>
     </style>
 
     <!-- Forest Green -->
@@ -97,12 +110,13 @@
         <item name="colorSurface">@color/forest_surface</item>
         <item name="materialCardViewStyle">@style/Widget.DailyFlow.Card.Forest</item>
         <item name="android:statusBarColor" tools:targetApi="l">@color/forest_primary</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.MediumComponent</item>
     </style>
 
     <style name="Widget.DailyFlow.Card.Forest" parent="Widget.MaterialComponents.CardView">
-        <item name="cardCornerRadius">12dp</item>
+        <item name="cardCornerRadius">20dp</item>
         <item name="cardBackgroundColor">#FFFFFF</item>
-        <item name="cardElevation">3dp</item>
+        <item name="cardElevation">4dp</item>
     </style>
 
     <!-- Mono Dark -->
@@ -114,14 +128,15 @@
         <item name="colorSurface">@color/mono_surface</item>
         <item name="materialCardViewStyle">@style/Widget.DailyFlow.Card.MonoDark</item>
         <item name="android:statusBarColor" tools:targetApi="l">@color/mono_bg</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.MediumComponent</item>
     </style>
 
     <style name="Widget.DailyFlow.Card.MonoDark" parent="Widget.MaterialComponents.CardView">
-        <item name="cardCornerRadius">8dp</item>
+        <item name="cardCornerRadius">18dp</item>
         <item name="cardBackgroundColor">@color/mono_surface</item>
         <item name="strokeWidth">1dp</item>
         <item name="strokeColor">@color/mono_secondary</item>
-        <item name="cardElevation">2dp</item>
+        <item name="cardElevation">4dp</item>
     </style>
 
     <!-- Candy Sweet -->
@@ -133,12 +148,13 @@
         <item name="colorSurface">@color/candy_surface</item>
         <item name="materialCardViewStyle">@style/Widget.DailyFlow.Card.Candy</item>
         <item name="android:statusBarColor" tools:targetApi="l">@color/candy_primary</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.MediumComponent</item>
     </style>
 
     <style name="Widget.DailyFlow.Card.Candy" parent="Widget.MaterialComponents.CardView">
-        <item name="cardCornerRadius">20dp</item>
+        <item name="cardCornerRadius">24dp</item>
         <item name="cardBackgroundColor">#FFFFFFFF</item>
-        <item name="cardElevation">8dp</item>
+        <item name="cardElevation">10dp</item>
     </style>
 
     <!-- Window animations -->

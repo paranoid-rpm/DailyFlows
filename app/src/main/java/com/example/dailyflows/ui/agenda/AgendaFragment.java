@@ -9,17 +9,21 @@ import android.view.animation.LayoutAnimationController;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textview.MaterialTextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.example.dailyflows.R;
+import com.example.dailyflows.data.local.AppDatabase;
 import com.example.dailyflows.data.local.entities.TaskEntity;
 import com.example.dailyflows.data.repo.TaskRepository;
 import com.example.dailyflows.data.repo.WeatherRepository;
@@ -35,6 +39,7 @@ public class AgendaFragment extends Fragment {
     private MaterialTextView tvOnline;
     private TaskListAdapter adapter;
     private RecyclerView rv;
+    private FloatingActionButton fab;
 
     public AgendaFragment() {
         super(R.layout.fragment_agenda);
@@ -46,11 +51,11 @@ public class AgendaFragment extends Fragment {
 
         tvDate = view.findViewById(R.id.tvDate);
         tvOnline = view.findViewById(R.id.tvOnline);
+        fab = view.findViewById(R.id.fabAdd);
 
         rv = view.findViewById(R.id.rv);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
         
-        // Add list animation
         LayoutAnimationController animation = AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_animation_fall_down);
         rv.setLayoutAnimation(animation);
 
@@ -67,17 +72,49 @@ public class AgendaFragment extends Fragment {
                 startActivity(i);
                 requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
             }
+
+            @Override
+            public void onDelete(TaskEntity task) {
+                new Thread(() -> {
+                    AppDatabase.get(requireContext()).taskDao().delete(task);
+                }).start();
+                Snackbar.make(view, "Задача удалена: " + task.title, Snackbar.LENGTH_SHORT).show();
+            }
         });
         rv.setAdapter(adapter);
 
+        ItemTouchHelper touchHelper = new ItemTouchHelper(new TaskListAdapter.SwipeToDeleteCallback(adapter.new Listener() {
+            @Override
+            public void onToggleDone(TaskEntity task, boolean done) {}
+
+            @Override
+            public void onClick(TaskEntity task) {}
+
+            @Override
+            public void onDelete(TaskEntity task) {
+                new Thread(() -> {
+                    AppDatabase.get(requireContext()).taskDao().delete(task);
+                }).start();
+                Snackbar.make(view, "Удалено: " + task.title, Snackbar.LENGTH_LONG)
+                        .setAction("Отменить", v -> {
+                            new Thread(() -> AppDatabase.get(requireContext()).taskDao().upsert(task)).start();
+                        })
+                        .show();
+            }
+        }, adapter));
+        touchHelper.attachToRecyclerView(rv);
+
         MaterialButton btnPickDate = view.findViewById(R.id.btnPickDate);
-        MaterialButton btnAdd = view.findViewById(R.id.btnAdd);
 
         selectedDayMillis = DateTimeUtil.atStartOfDay(System.currentTimeMillis());
         renderHeader();
 
         btnPickDate.setOnClickListener(v -> openDatePicker());
-        btnAdd.setOnClickListener(v -> {
+        fab.setOnClickListener(v -> {
+            fab.animate().scaleX(0.8f).scaleY(0.8f).setDuration(100).withEndAction(() -> {
+                fab.animate().scaleX(1f).scaleY(1f).setDuration(100).start();
+            }).start();
+
             Intent i = new Intent(requireContext(), EditTaskActivity.class);
             i.putExtra(EditTaskActivity.EXTRA_PREFILL_DAY, selectedDayMillis);
             startActivity(i);

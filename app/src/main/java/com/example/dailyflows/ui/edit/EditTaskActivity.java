@@ -2,9 +2,10 @@ package com.example.dailyflows.ui.edit;
 
 import android.app.TimePickerDialog;
 import android.os.Bundle;
+import android.os.Vibrator;
+import android.content.Context;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.slider.Slider;
@@ -19,14 +20,16 @@ import com.example.dailyflows.data.local.AppDatabase;
 import com.example.dailyflows.data.local.entities.TaskEntity;
 import com.example.dailyflows.data.repo.TaskRepository;
 import com.example.dailyflows.util.DateTimeUtil;
+import com.example.dailyflows.ui.BaseActivity;
 
-public class EditTaskActivity extends AppCompatActivity {
+public class EditTaskActivity extends BaseActivity {
 
     public static final String EXTRA_TASK_ID = "task_id";
     public static final String EXTRA_PREFILL_DAY = "prefill_day";
 
     private TaskRepository repo;
     private TaskEntity task;
+    private Vibrator vibrator;
 
     private TextInputEditText etTitle;
     private TextInputEditText etNote;
@@ -44,6 +47,7 @@ public class EditTaskActivity extends AppCompatActivity {
         setContentView(R.layout.activity_edit_task);
 
         repo = new TaskRepository(this);
+        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         etTitle = findViewById(R.id.etTitle);
         etNote = findViewById(R.id.etNote);
@@ -51,10 +55,19 @@ public class EditTaskActivity extends AppCompatActivity {
         tvPriority = findViewById(R.id.tvPriority);
         sliderPriority = findViewById(R.id.sliderPriority);
 
-        sliderPriority.addOnChangeListener((slider, value, fromUser) -> tvPriority.setText("Приоритет: " + (int) value));
+        sliderPriority.addOnChangeListener((slider, value, fromUser) -> {
+            if (fromUser && vibrator != null) vibrator.vibrate(10);
+            tvPriority.setText(getPriorityEmoji((int) value) + " Приоритет: " + (int) value);
+        });
 
-        findViewById(R.id.btnDateTime).setOnClickListener(v -> pickDateTime());
-        findViewById(R.id.btnSave).setOnClickListener(v -> save());
+        findViewById(R.id.btnDateTime).setOnClickListener(v -> {
+            haptic();
+            pickDateTime();
+        });
+        findViewById(R.id.btnSave).setOnClickListener(v -> {
+            haptic();
+            save();
+        });
 
         String id = getIntent().getStringExtra(EXTRA_TASK_ID);
         long prefillDay = getIntent().getLongExtra(EXTRA_PREFILL_DAY, 0);
@@ -87,7 +100,7 @@ public class EditTaskActivity extends AppCompatActivity {
         etTitle.setText(t.title);
         etNote.setText(t.note != null ? t.note : "");
         sliderPriority.setValue(t.priority);
-        tvPriority.setText("Приоритет: " + t.priority);
+        tvPriority.setText(getPriorityEmoji(t.priority) + " Приоритет: " + t.priority);
 
         if (t.dueAtMillis > 0) {
             tvWhen.setText(DateTimeUtil.formatDate(t.dueAtMillis) + " " + DateTimeUtil.formatTime(t.dueAtMillis));
@@ -128,6 +141,7 @@ public class EditTaskActivity extends AppCompatActivity {
 
                         task.dueAtMillis = c.getTimeInMillis();
                         tvWhen.setText(DateTimeUtil.formatDate(task.dueAtMillis) + " " + DateTimeUtil.formatTime(task.dueAtMillis));
+                        haptic();
                     },
                     pickedHour,
                     pickedMinute,
@@ -150,7 +164,18 @@ public class EditTaskActivity extends AppCompatActivity {
         task.note = etNote.getText() != null ? etNote.getText().toString() : "";
         task.priority = (int) sliderPriority.getValue();
 
-        // Wait for DB write to complete before closing
         repo.upsert(task, this, () -> runOnUiThread(this::finish));
+    }
+
+    private void haptic() {
+        if (vibrator != null) vibrator.vibrate(20);
+    }
+
+    private String getPriorityEmoji(int priority) {
+        if (priority == 0) return "⚪";
+        if (priority <= 2) return "🟢";
+        if (priority <= 5) return "🟡";
+        if (priority <= 8) return "🟠";
+        return "🔴";
     }
 }

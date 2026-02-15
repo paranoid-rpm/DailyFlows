@@ -1,12 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
         android:name="com.example.dailyflows.App"
         android:allowBackup="true"
-        android:label="@string/app_name"
-        android:theme="@style/Theme.DailyFlow">
+        android:label="@string/app_name">
 
         <activity
             android:name="com.example.dailyflows.ui.edit.EditTaskActivity"
