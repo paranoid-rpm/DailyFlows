@@ -85,7 +85,17 @@ public class SettingsFragment extends Fragment {
     }
 
     private void showStyleDialog() {
-        String[] styles = {"Стандартный", "Apple Glass", "Pixel Minimalism"};
+        String[] styles = {
+                "Стандартный",
+                "Apple Glass",
+                "Pixel Minimalism",
+                "Cyberpunk Neon",
+                "Sunset Warm",
+                "Ocean Deep",
+                "Forest Green",
+                "Mono Dark",
+                "Candy Sweet"
+        };
         int current = PrefsUtil.getStyle(requireContext());
 
         new AlertDialog.Builder(requireContext())

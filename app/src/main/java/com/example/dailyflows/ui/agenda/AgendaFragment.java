@@ -3,6 +3,8 @@ package com.example.dailyflows.ui.agenda;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LayoutAnimationController;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -32,6 +34,7 @@ public class AgendaFragment extends Fragment {
     private MaterialTextView tvDate;
     private MaterialTextView tvOnline;
     private TaskListAdapter adapter;
+    private RecyclerView rv;
 
     public AgendaFragment() {
         super(R.layout.fragment_agenda);
@@ -44,8 +47,13 @@ public class AgendaFragment extends Fragment {
         tvDate = view.findViewById(R.id.tvDate);
         tvOnline = view.findViewById(R.id.tvOnline);
 
-        RecyclerView rv = view.findViewById(R.id.rv);
+        rv = view.findViewById(R.id.rv);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
+        
+        // Add list animation
+        LayoutAnimationController animation = AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_animation_fall_down);
+        rv.setLayoutAnimation(animation);
+
         adapter = new TaskListAdapter(new TaskListAdapter.Listener() {
             @Override
             public void onToggleDone(TaskEntity task, boolean done) {
@@ -57,6 +65,7 @@ public class AgendaFragment extends Fragment {
                 Intent i = new Intent(requireContext(), EditTaskActivity.class);
                 i.putExtra(EditTaskActivity.EXTRA_TASK_ID, task.id);
                 startActivity(i);
+                requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
             }
         });
         rv.setAdapter(adapter);
@@ -72,6 +81,7 @@ public class AgendaFragment extends Fragment {
             Intent i = new Intent(requireContext(), EditTaskActivity.class);
             i.putExtra(EditTaskActivity.EXTRA_PREFILL_DAY, selectedDayMillis);
             startActivity(i);
+            requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
 
         repo.observeAll().observe(getViewLifecycleOwner(), tasks -> {
@@ -84,6 +94,7 @@ public class AgendaFragment extends Fragment {
                 if (t.dueAtMillis >= start && t.dueAtMillis <= end) out.add(t);
             }
             adapter.submitList(out);
+            rv.scheduleLayoutAnimation();
         });
     }
 
