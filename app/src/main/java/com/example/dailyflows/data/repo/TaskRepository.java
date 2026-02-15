@@ -1,6 +1,8 @@
 package com.example.dailyflows.data.repo;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.lifecycle.LiveData;
 
@@ -17,6 +19,7 @@ public class TaskRepository {
 
     private final AppDatabase db;
     private final ExecutorService io = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public TaskRepository(Context context) {
         db = AppDatabase.get(context);
@@ -46,7 +49,9 @@ public class TaskRepository {
                 NotificationUtil.cancelReminderWork(context, task.id);
             }
 
-            if (onComplete != null) onComplete.run();
+            if (onComplete != null) {
+                mainHandler.post(onComplete);
+            }
         });
     }
 

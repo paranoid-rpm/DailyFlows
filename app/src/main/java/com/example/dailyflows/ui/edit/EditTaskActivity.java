@@ -4,6 +4,7 @@ import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -23,6 +24,8 @@ import com.example.dailyflows.util.DateTimeUtil;
 import com.example.dailyflows.ui.BaseActivity;
 
 public class EditTaskActivity extends BaseActivity {
+
+    private static final String TAG = "EditTaskActivity";
 
     public static final String EXTRA_TASK_ID = "task_id";
     public static final String EXTRA_PREFILL_DAY = "prefill_day";
@@ -164,7 +167,12 @@ public class EditTaskActivity extends BaseActivity {
         task.note = etNote.getText() != null ? etNote.getText().toString() : "";
         task.priority = (int) sliderPriority.getValue();
 
-        repo.upsert(task, this, () -> runOnUiThread(this::finish));
+        Log.d(TAG, "Saving task: " + task.title + ", id: " + task.id);
+
+        repo.upsert(task, this, () -> {
+            Log.d(TAG, "Task saved, finishing activity");
+            finish();
+        });
     }
 
     private void haptic() {
