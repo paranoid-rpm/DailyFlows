@@ -142,6 +142,7 @@ public class AgendaFragment extends Fragment {
                         selectedDayMillis = DateTimeUtil.atStartOfDay(selectedDayMillis + 24L * 60L * 60L * 1000L);
                     }
                     renderHeader();
+                    updateListFromCache();
                     return true;
                 }
                 return false;
@@ -158,17 +159,29 @@ public class AgendaFragment extends Fragment {
         });
 
         repo.observeAll().observe(getViewLifecycleOwner(), tasks -> {
-            long start = DateTimeUtil.atStartOfDay(selectedDayMillis);
-            long end = DateTimeUtil.atEndOfDay(selectedDayMillis);
-
-            List<TaskEntity> out = new ArrayList<>();
-            for (TaskEntity t : tasks) {
-                if (t.dueAtMillis == 0) continue;
-                if (t.dueAtMillis >= start && t.dueAtMillis <= end) out.add(t);
-            }
-            adapter.submitList(out);
+            cachedTasks = tasks;
+            updateListFromCache();
             rv.scheduleLayoutAnimation();
         });
+    }
+
+    private List<TaskEntity> cachedTasks = new ArrayList<>();
+
+    private void updateListFromCache() {
+        long start = DateTimeUtil.atStartOfDay(selectedDayMillis);
+        long end = DateTimeUtil.atEndOfDay(selectedDayMillis);
+
+        List<TaskEntity> out = new ArrayList<>();
+        for (TaskEntity t : cachedTasks) {
+            if (t.dueAtMillis == 0) continue;
+            if (t.dueAtMillis >= start && t.dueAtMillis <= end) out.add(t);
+        }
+        adapter.submitList(out);
+        Log.d(TAG, "Filter day=" + selectedDayMillis + " start=" + start + " end=" + end + " total=" + cachedTasks.size() + " shown=" + out.size());
+        if (!out.isEmpty()) {
+            TaskEntity first = out.get(0);
+            Log.d(TAG, "First shown: title=" + first.title + " dueAtMillis=" + first.dueAtMillis);
+        }
     }
 
     private void deleteTask(TaskEntity task, View view) {
@@ -200,6 +213,7 @@ public class AgendaFragment extends Fragment {
             if (selection != null) {
                 selectedDayMillis = DateTimeUtil.atStartOfDay(selection);
                 renderHeader();
+                updateListFromCache();
             }
         });
 
