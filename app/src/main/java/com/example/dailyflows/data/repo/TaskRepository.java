@@ -19,7 +19,7 @@ import com.example.dailyflows.util.NotificationUtil;
 public class TaskRepository {
 
     private static final String TAG = "TaskRepository";
-    
+
     private final AppDatabase db;
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -38,12 +38,12 @@ public class TaskRepository {
 
     public void upsert(TaskEntity task, Context context, Runnable onComplete) {
         Log.d(TAG, "[REPO] upsert() called - scheduling background task");
-        Log.d(TAG, "[REPO] Task to save: id=" + task.id + ", title=" + task.title + ", note_length=" + (task.note != null ? task.note.length() : 0));
-        
+        Log.d(TAG, "[REPO] Task to save: id=" + task.id + ", title=" + task.title + ", note_length=" + (task.note != null ? task.note.length() : 0) + ", dueAtMillis=" + task.dueAtMillis);
+
         io.execute(() -> {
             try {
                 Log.d(TAG, "[REPO] Background thread started");
-                
+
                 if (task.id == null) {
                     task.id = UUID.randomUUID().toString();
                     Log.d(TAG, "[REPO] Generated new ID: " + task.id);
@@ -52,15 +52,14 @@ public class TaskRepository {
                 long now = System.currentTimeMillis();
                 if (task.createdAtMillis == 0) task.createdAtMillis = now;
                 task.updatedAtMillis = now;
-                
+
                 Log.d(TAG, "[REPO] Calling db.taskDao().upsert()...");
                 db.taskDao().upsert(task);
                 Log.d(TAG, "[REPO] ✅ Database upsert COMPLETE!");
-                
-                // Verify save
+
                 TaskEntity saved = db.taskDao().getById(task.id);
                 if (saved != null) {
-                    Log.d(TAG, "[REPO] ✅ Verification: Task EXISTS in DB! Title: " + saved.title + ", note_length: " + (saved.note != null ? saved.note.length() : 0));
+                    Log.d(TAG, "[REPO] ✅ Verification: Task EXISTS in DB! Title: " + saved.title + ", dueAtMillis=" + saved.dueAtMillis + ", note_length: " + (saved.note != null ? saved.note.length() : 0));
                 } else {
                     Log.e(TAG, "[REPO] ❌ Verification FAILED: Task NOT FOUND in DB!");
                 }
@@ -79,7 +78,7 @@ public class TaskRepository {
                 } else {
                     Log.d(TAG, "[REPO] No onComplete callback provided");
                 }
-                
+
                 Log.d(TAG, "[REPO] === REPOSITORY SAVE COMPLETE ===");
             } catch (Exception e) {
                 Log.e(TAG, "[REPO] ❌ ERROR during upsert!", e);
