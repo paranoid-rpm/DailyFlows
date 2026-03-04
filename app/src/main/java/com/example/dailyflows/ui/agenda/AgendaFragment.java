@@ -2,6 +2,7 @@ package com.example.dailyflows.ui.agenda;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -35,6 +36,8 @@ import com.example.dailyflows.util.DateTimeUtil;
 
 public class AgendaFragment extends Fragment {
 
+    private static final String TAG = "AgendaFragment";
+
     private TaskRepository repo;
     private long selectedDayMillis;
 
@@ -42,7 +45,8 @@ public class AgendaFragment extends Fragment {
     private MaterialTextView tvOnline;
     private TaskListAdapter adapter;
     private RecyclerView rv;
-    private FloatingActionButton fab;
+    private FloatingActionButton fabAdd;
+    private FloatingActionButton fabAll;
 
     public AgendaFragment() {
         super(R.layout.fragment_agenda);
@@ -54,7 +58,8 @@ public class AgendaFragment extends Fragment {
 
         tvDate = view.findViewById(R.id.tvDate);
         tvOnline = view.findViewById(R.id.tvOnline);
-        fab = view.findViewById(R.id.fabAdd);
+        fabAdd = view.findViewById(R.id.fabAdd);
+        fabAll = view.findViewById(R.id.fabAllNotes);
 
         rv = view.findViewById(R.id.rv);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -98,13 +103,13 @@ public class AgendaFragment extends Fragment {
         touchHelper.attachToRecyclerView(rv);
 
         MaterialButton btnPickDate = view.findViewById(R.id.btnPickDate);
-        MaterialButton btnAllNotes = view.findViewById(R.id.btnAllNotes);
 
         selectedDayMillis = DateTimeUtil.atStartOfDay(System.currentTimeMillis());
         renderHeader();
 
         btnPickDate.setOnClickListener(v -> openDatePicker());
-        btnAllNotes.setOnClickListener(v -> {
+
+        fabAll.setOnClickListener(v -> {
             getParentFragmentManager()
                     .beginTransaction()
                     .setCustomAnimations(
@@ -137,7 +142,6 @@ public class AgendaFragment extends Fragment {
                         selectedDayMillis = DateTimeUtil.atStartOfDay(selectedDayMillis + 24L * 60L * 60L * 1000L);
                     }
                     renderHeader();
-                    // list will update because observer recalculates based on selectedDayMillis
                     return true;
                 }
                 return false;
@@ -145,13 +149,10 @@ public class AgendaFragment extends Fragment {
         });
         headerCard.setOnTouchListener((v, event) -> detector.onTouchEvent(event));
 
-        fab.setOnClickListener(v -> {
-            fab.animate().scaleX(0.8f).scaleY(0.8f).setDuration(100).withEndAction(() -> {
-                fab.animate().scaleX(1f).scaleY(1f).setDuration(100).start();
-            }).start();
-
+        fabAdd.setOnClickListener(v -> {
             Intent i = new Intent(requireContext(), EditTaskActivity.class);
             i.putExtra(EditTaskActivity.EXTRA_PREFILL_DAY, selectedDayMillis);
+            Log.d(TAG, "Starting EditTaskActivity with prefill day: " + selectedDayMillis);
             startActivity(i);
             requireActivity().overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
