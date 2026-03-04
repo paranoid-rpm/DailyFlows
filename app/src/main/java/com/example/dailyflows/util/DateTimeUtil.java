@@ -18,6 +18,12 @@ public class DateTimeUtil {
         return TIME_FMT.format(new Date(millis));
     }
 
+    // System locale weekday (e.g. "среда")
+    public static String formatWeekday(long millis) {
+        SimpleDateFormat fmt = new SimpleDateFormat("EEEE", Locale.getDefault());
+        return fmt.format(new Date(millis));
+    }
+
     public static long atStartOfDay(long millis) {
         Calendar c = Calendar.getInstance();
         c.setTimeInMillis(millis);

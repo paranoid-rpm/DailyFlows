@@ -39,7 +39,12 @@ public class TaskListAdapter extends ListAdapter<TaskEntity, TaskListAdapter.VH>
 
             @Override
             public boolean areContentsTheSame(@NonNull TaskEntity a, @NonNull TaskEntity b) {
-                return a.title.equals(b.title) && a.done == b.done && a.priority == b.priority;
+                return a.title.equals(b.title)
+                        && a.done == b.done
+                        && a.priority == b.priority
+                        && a.dueAtMillis == b.dueAtMillis
+                        && ((a.note == null && b.note == null) || (a.note != null && a.note.equals(b.note)))
+                        && ((a.projectId == null && b.projectId == null) || (a.projectId != null && a.projectId.equals(b.projectId)));
             }
         });
         this.listener = listener;
@@ -56,18 +61,25 @@ public class TaskListAdapter extends ListAdapter<TaskEntity, TaskListAdapter.VH>
     public void onBindViewHolder(@NonNull VH vh, int position) {
         TaskEntity task = getItem(position);
 
-        vh.tvTitle.setText(getPriorityEmoji(task.priority) + " " + task.title);
-        vh.tvTime.setText(DateTimeUtil.formatTime(task.dueAtMillis));
+        String title = getPriorityEmoji(task.priority) + " " + task.title;
+        if ("__deleted__".equals(task.projectId)) {
+            title = "🗑 " + title;
+        }
+        vh.tvTitle.setText(title);
+
+        if (task.dueAtMillis > 0) {
+            vh.tvTime.setText(DateTimeUtil.formatTime(task.dueAtMillis));
+        } else {
+            vh.tvTime.setText("—");
+        }
+
         vh.cbDone.setChecked(task.done);
 
-        // Show note preview - parse HTML to plain text
         if (task.note != null && !task.note.isEmpty()) {
             vh.tvNote.setVisibility(View.VISIBLE);
-            
-            // Convert HTML to plain text for preview
+
             String plainText;
             if (task.note.contains("<") && task.note.contains(">")) {
-                // Parse HTML and extract plain text
                 try {
                     plainText = Html.fromHtml(task.note, Html.FROM_HTML_MODE_COMPACT).toString();
                 } catch (Exception e) {
@@ -76,18 +88,14 @@ public class TaskListAdapter extends ListAdapter<TaskEntity, TaskListAdapter.VH>
             } else {
                 plainText = task.note;
             }
-            
-            // Remove excessive whitespace and newlines
+
             plainText = plainText.replaceAll("\\s+", " ").trim();
-            
-            // Truncate to 50 characters
             String preview = plainText.length() > 50 ? plainText.substring(0, 50) + "..." : plainText;
             vh.tvNote.setText(preview);
         } else {
             vh.tvNote.setVisibility(View.GONE);
         }
 
-        // Priority color bar
         vh.priorityBar.setBackgroundColor(getPriorityColor(task.priority));
 
         vh.cbDone.setOnCheckedChangeListener((buttonView, isChecked) -> {

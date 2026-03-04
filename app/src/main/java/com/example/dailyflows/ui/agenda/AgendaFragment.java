@@ -37,6 +37,7 @@ import com.example.dailyflows.util.DateTimeUtil;
 public class AgendaFragment extends Fragment {
 
     private static final String TAG = "AgendaFragment";
+    private static final String DELETED_MARK = "__deleted__";
 
     private TaskRepository repo;
     private long selectedDayMillis;
@@ -129,6 +130,11 @@ public class AgendaFragment extends Fragment {
             private static final int SWIPE_VELOCITY_THRESHOLD = 120;
 
             @Override
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
+
+            @Override
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
                 if (e1 == null || e2 == null) return false;
                 float diffX = e2.getX() - e1.getX();
@@ -159,7 +165,7 @@ public class AgendaFragment extends Fragment {
         });
 
         repo.observeAll().observe(getViewLifecycleOwner(), tasks -> {
-            cachedTasks = tasks;
+            cachedTasks = tasks != null ? tasks : new ArrayList<>();
             updateListFromCache();
             rv.scheduleLayoutAnimation();
         });
@@ -173,30 +179,35 @@ public class AgendaFragment extends Fragment {
 
         List<TaskEntity> out = new ArrayList<>();
         for (TaskEntity t : cachedTasks) {
+            if (t == null) continue;
+            if (DELETED_MARK.equals(t.projectId)) continue;
             if (t.dueAtMillis == 0) continue;
             if (t.dueAtMillis >= start && t.dueAtMillis <= end) out.add(t);
         }
         adapter.submitList(out);
         Log.d(TAG, "Filter day=" + selectedDayMillis + " start=" + start + " end=" + end + " total=" + cachedTasks.size() + " shown=" + out.size());
-        if (!out.isEmpty()) {
-            TaskEntity first = out.get(0);
-            Log.d(TAG, "First shown: title=" + first.title + " dueAtMillis=" + first.dueAtMillis);
-        }
     }
 
     private void deleteTask(TaskEntity task, View view) {
+        final String oldProjectId = task.projectId;
+        task.projectId = DELETED_MARK;
+        task.updatedAtMillis = System.currentTimeMillis();
+
         new Thread(() -> {
-            AppDatabase.get(requireContext()).taskDao().delete(task);
+            AppDatabase.get(requireContext()).taskDao().upsert(task);
         }).start();
+
         Snackbar.make(view, "Удалено: " + task.title, Snackbar.LENGTH_LONG)
                 .setAction("Отменить", v -> {
+                    task.projectId = oldProjectId;
+                    task.updatedAtMillis = System.currentTimeMillis();
                     new Thread(() -> AppDatabase.get(requireContext()).taskDao().upsert(task)).start();
                 })
                 .show();
     }
 
     private void renderHeader() {
-        tvDate.setText("День: " + DateTimeUtil.formatDate(selectedDayMillis));
+        tvDate.setText(DateTimeUtil.formatWeekday(selectedDayMillis));
 
         String online = WeatherRepository.getText(requireContext());
         if (online == null) online = "Онлайн: нет (подождите фонового обновления)";

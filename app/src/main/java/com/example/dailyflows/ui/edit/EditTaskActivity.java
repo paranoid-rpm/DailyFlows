@@ -159,12 +159,15 @@ public class EditTaskActivity extends BaseActivity {
             t.priority = 0;
             t.done = false;
 
-            if (prefillDay > 0) {
-                pickedDayMillis = DateTimeUtil.atStartOfDay(prefillDay);
-            } else {
-                pickedDayMillis = DateTimeUtil.atStartOfDay(System.currentTimeMillis());
-            }
-            t.dueAtMillis = DateTimeUtil.atStartOfDay(pickedDayMillis) + pickedHour * 60L * 60L * 1000L + pickedMinute * 60L * 1000L;
+            pickedDayMillis = prefillDay > 0 ? DateTimeUtil.atStartOfDay(prefillDay) : DateTimeUtil.atStartOfDay(System.currentTimeMillis());
+            // set a sane default due time (picked day + picked time)
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(pickedDayMillis);
+            c.set(Calendar.HOUR_OF_DAY, pickedHour);
+            c.set(Calendar.MINUTE, pickedMinute);
+            c.set(Calendar.SECOND, 0);
+            c.set(Calendar.MILLISECOND, 0);
+            t.dueAtMillis = c.getTimeInMillis();
 
             bind(t);
         }
@@ -329,18 +332,16 @@ public class EditTaskActivity extends BaseActivity {
         task.title = title;
         task.priority = currentPriority;
 
-        // Guarantee dueAtMillis is set when creating tasks for a selected day
-        if (task.dueAtMillis == 0) {
-            long baseDay = pickedDayMillis > 0 ? pickedDayMillis : DateTimeUtil.atStartOfDay(System.currentTimeMillis());
-            Calendar c = Calendar.getInstance();
-            c.setTimeInMillis(baseDay);
-            c.set(Calendar.HOUR_OF_DAY, pickedHour);
-            c.set(Calendar.MINUTE, pickedMinute);
-            c.set(Calendar.SECOND, 0);
-            c.set(Calendar.MILLISECOND, 0);
-            task.dueAtMillis = c.getTimeInMillis();
-            Log.d(TAG, "dueAtMillis was 0, auto-set to " + task.dueAtMillis);
-        }
+        // Always rebuild dueAtMillis from picked day + picked time
+        if (pickedDayMillis == 0) pickedDayMillis = DateTimeUtil.atStartOfDay(System.currentTimeMillis());
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(pickedDayMillis);
+        c.set(Calendar.HOUR_OF_DAY, pickedHour);
+        c.set(Calendar.MINUTE, pickedMinute);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        task.dueAtMillis = c.getTimeInMillis();
+        Log.d(TAG, "Saving with pickedDayMillis=" + pickedDayMillis + " pickedHour=" + pickedHour + " pickedMinute=" + pickedMinute + " => dueAtMillis=" + task.dueAtMillis);
 
         Editable editable = etNote.getText();
         if (editable != null && editable.length() > 0) {
