@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="all_notes">Все заметки</string>
+    <string name="add_task">Добавить заметку</string>
+    <string name="pick_date">Выбрать дату</string>
+    <string name="online_unavailable">Онлайн: нет (подождите фонового обновления)</string>
+</resources>

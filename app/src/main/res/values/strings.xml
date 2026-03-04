@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">DailyFlows</string>
+
+    <string name="all_notes">All notes</string>
+    <string name="add_task">Add note</string>
+    <string name="pick_date">Pick date</string>
+    <string name="online_unavailable">Online: no (wait for background update)</string>
 </resources>

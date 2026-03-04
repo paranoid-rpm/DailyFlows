@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -48,6 +47,7 @@ public class AgendaFragment extends Fragment {
     private RecyclerView rv;
     private FloatingActionButton fabAdd;
     private FloatingActionButton fabAll;
+    private FloatingActionButton fabPickDate;
 
     public AgendaFragment() {
         super(R.layout.fragment_agenda);
@@ -61,6 +61,7 @@ public class AgendaFragment extends Fragment {
         tvOnline = view.findViewById(R.id.tvOnline);
         fabAdd = view.findViewById(R.id.fabAdd);
         fabAll = view.findViewById(R.id.fabAllNotes);
+        fabPickDate = view.findViewById(R.id.fabPickDate);
 
         rv = view.findViewById(R.id.rv);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -103,12 +104,10 @@ public class AgendaFragment extends Fragment {
         }, adapter));
         touchHelper.attachToRecyclerView(rv);
 
-        MaterialButton btnPickDate = view.findViewById(R.id.btnPickDate);
-
         selectedDayMillis = DateTimeUtil.atStartOfDay(System.currentTimeMillis());
         renderHeader();
 
-        btnPickDate.setOnClickListener(v -> openDatePicker());
+        fabPickDate.setOnClickListener(v -> openDatePicker());
 
         fabAll.setOnClickListener(v -> {
             getParentFragmentManager()
@@ -197,8 +196,8 @@ public class AgendaFragment extends Fragment {
             AppDatabase.get(requireContext()).taskDao().upsert(task);
         }).start();
 
-        Snackbar.make(view, "Удалено: " + task.title, Snackbar.LENGTH_LONG)
-                .setAction("Отменить", v -> {
+        Snackbar.make(view, getString(R.string.all_notes) + ": " + task.title, Snackbar.LENGTH_LONG)
+                .setAction("Undo", v -> {
                     task.projectId = oldProjectId;
                     task.updatedAtMillis = System.currentTimeMillis();
                     new Thread(() -> AppDatabase.get(requireContext()).taskDao().upsert(task)).start();
@@ -210,13 +209,13 @@ public class AgendaFragment extends Fragment {
         tvDate.setText(DateTimeUtil.formatWeekday(selectedDayMillis));
 
         String online = WeatherRepository.getText(requireContext());
-        if (online == null) online = "Онлайн: нет (подождите фонового обновления)";
+        if (online == null) online = getString(R.string.online_unavailable);
         tvOnline.setText(online);
     }
 
     private void openDatePicker() {
         MaterialDatePicker<Long> picker = MaterialDatePicker.Builder.datePicker()
-                .setTitleText("Выберите дату")
+                .setTitleText(getString(R.string.pick_date))
                 .setSelection(selectedDayMillis)
                 .build();
 
