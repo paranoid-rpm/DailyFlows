@@ -2,6 +2,8 @@ package com.example.dailyflows.ui.agenda;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
@@ -14,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -55,7 +58,7 @@ public class AgendaFragment extends Fragment {
 
         rv = view.findViewById(R.id.rv);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
-        
+
         LayoutAnimationController animation = AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.layout_animation_fall_down);
         rv.setLayoutAnimation(animation);
 
@@ -95,11 +98,53 @@ public class AgendaFragment extends Fragment {
         touchHelper.attachToRecyclerView(rv);
 
         MaterialButton btnPickDate = view.findViewById(R.id.btnPickDate);
+        MaterialButton btnAllNotes = view.findViewById(R.id.btnAllNotes);
 
         selectedDayMillis = DateTimeUtil.atStartOfDay(System.currentTimeMillis());
         renderHeader();
 
         btnPickDate.setOnClickListener(v -> openDatePicker());
+        btnAllNotes.setOnClickListener(v -> {
+            getParentFragmentManager()
+                    .beginTransaction()
+                    .setCustomAnimations(
+                            R.anim.slide_in_right,
+                            R.anim.slide_out_left,
+                            R.anim.slide_in_left,
+                            R.anim.slide_out_right
+                    )
+                    .replace(R.id.container, new AllNotesFragment())
+                    .addToBackStack("all_notes")
+                    .commit();
+        });
+
+        MaterialCardView headerCard = view.findViewById(R.id.dayHeaderCard);
+        GestureDetector detector = new GestureDetector(requireContext(), new GestureDetector.SimpleOnGestureListener() {
+            private static final int SWIPE_THRESHOLD = 120;
+            private static final int SWIPE_VELOCITY_THRESHOLD = 120;
+
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                if (e1 == null || e2 == null) return false;
+                float diffX = e2.getX() - e1.getX();
+                float diffY = e2.getY() - e1.getY();
+                if (Math.abs(diffX) > Math.abs(diffY)
+                        && Math.abs(diffX) > SWIPE_THRESHOLD
+                        && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (diffX > 0) {
+                        selectedDayMillis = DateTimeUtil.atStartOfDay(selectedDayMillis - 24L * 60L * 60L * 1000L);
+                    } else {
+                        selectedDayMillis = DateTimeUtil.atStartOfDay(selectedDayMillis + 24L * 60L * 60L * 1000L);
+                    }
+                    renderHeader();
+                    // list will update because observer recalculates based on selectedDayMillis
+                    return true;
+                }
+                return false;
+            }
+        });
+        headerCard.setOnTouchListener((v, event) -> detector.onTouchEvent(event));
+
         fab.setOnClickListener(v -> {
             fab.animate().scaleX(0.8f).scaleY(0.8f).setDuration(100).withEndAction(() -> {
                 fab.animate().scaleX(1f).scaleY(1f).setDuration(100).start();
