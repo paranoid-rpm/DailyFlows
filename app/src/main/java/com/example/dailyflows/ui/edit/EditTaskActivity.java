@@ -63,7 +63,6 @@ public class EditTaskActivity extends BaseActivity {
     private int currentPriority = 0;
     private String selectedTag = null;
 
-    // Simple undo stack (stores HTML snapshots)
     private final Deque<String> undoStack = new ArrayDeque<>();
     private boolean isUndoing = false;
 
@@ -82,7 +81,6 @@ public class EditTaskActivity extends BaseActivity {
         etNote = findViewById(R.id.etNote);
         fabSave = findViewById(R.id.fabSave);
 
-        // Track changes for undo (store previous state as HTML)
         etNote.addTextChangedListener(new TextWatcher() {
             private String beforeHtml = "";
 
@@ -98,11 +96,9 @@ public class EditTaskActivity extends BaseActivity {
             @Override
             public void afterTextChanged(Editable s) {
                 if (isUndoing) return;
-                // push snapshot only if changed
                 String nowHtml = toHtml(s);
                 if (!nowHtml.equals(beforeHtml)) {
                     if (undoStack.size() > 50) {
-                        // keep memory sane
                         while (undoStack.size() > 40) undoStack.removeFirst();
                     }
                     undoStack.addLast(beforeHtml);
@@ -162,7 +158,14 @@ public class EditTaskActivity extends BaseActivity {
             t.note = "";
             t.priority = 0;
             t.done = false;
-            t.dueAtMillis = prefillDay > 0 ? (prefillDay + 9 * 60 * 60 * 1000L) : 0;
+
+            if (prefillDay > 0) {
+                pickedDayMillis = DateTimeUtil.atStartOfDay(prefillDay);
+            } else {
+                pickedDayMillis = DateTimeUtil.atStartOfDay(System.currentTimeMillis());
+            }
+            t.dueAtMillis = DateTimeUtil.atStartOfDay(pickedDayMillis) + pickedHour * 60L * 60L * 1000L + pickedMinute * 60L * 1000L;
+
             bind(t);
         }
     }
@@ -186,7 +189,6 @@ public class EditTaskActivity extends BaseActivity {
         try {
             Spanned sp = Html.fromHtml(prevHtml, Html.FROM_HTML_MODE_COMPACT);
             etNote.setText(sp);
-            // Move cursor to end for simplicity
             etNote.setSelection(etNote.getText() != null ? etNote.getText().length() : 0);
         } catch (Exception e) {
             etNote.setText(prevHtml);
@@ -204,27 +206,21 @@ public class EditTaskActivity extends BaseActivity {
         task = t;
         etTitle.setText(t.title);
 
-        // reset undo stack on bind
         undoStack.clear();
 
-        // Load HTML formatted text
         if (t.note != null && !t.note.isEmpty()) {
             try {
                 if (t.note.contains("<") && t.note.contains(">")) {
                     Spanned spanned = Html.fromHtml(t.note, Html.FROM_HTML_MODE_COMPACT);
                     etNote.setText(spanned);
-                    Log.d(TAG, "Loaded HTML note, original length: " + t.note.length() + ", rendered length: " + spanned.length());
                 } else {
                     etNote.setText(t.note);
-                    Log.d(TAG, "Loaded plain text note, length: " + t.note.length());
                 }
             } catch (Exception e) {
-                Log.e(TAG, "Error loading note", e);
                 etNote.setText(t.note);
             }
         } else {
             etNote.setText("");
-            Log.d(TAG, "Note is empty");
         }
 
         currentPriority = t.priority;
@@ -237,8 +233,6 @@ public class EditTaskActivity extends BaseActivity {
             pickedMinute = c.get(Calendar.MINUTE);
         }
     }
-
-    // (rest unchanged) - keep existing methods
 
     private void showSaveDialog() {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_save_note, null);
@@ -326,8 +320,6 @@ public class EditTaskActivity extends BaseActivity {
     }
 
     private void save() {
-        Log.d(TAG, "=== SAVE START ===");
-
         String title = etTitle.getText() != null ? etTitle.getText().toString().trim() : "";
         if (title.isEmpty()) {
             etTitle.setError("Введите заголовок");
@@ -337,8 +329,20 @@ public class EditTaskActivity extends BaseActivity {
         task.title = title;
         task.priority = currentPriority;
 
-        Editable editable = etNote.getText();
+        // Guarantee dueAtMillis is set when creating tasks for a selected day
+        if (task.dueAtMillis == 0) {
+            long baseDay = pickedDayMillis > 0 ? pickedDayMillis : DateTimeUtil.atStartOfDay(System.currentTimeMillis());
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(baseDay);
+            c.set(Calendar.HOUR_OF_DAY, pickedHour);
+            c.set(Calendar.MINUTE, pickedMinute);
+            c.set(Calendar.SECOND, 0);
+            c.set(Calendar.MILLISECOND, 0);
+            task.dueAtMillis = c.getTimeInMillis();
+            Log.d(TAG, "dueAtMillis was 0, auto-set to " + task.dueAtMillis);
+        }
 
+        Editable editable = etNote.getText();
         if (editable != null && editable.length() > 0) {
             task.note = toHtml(editable);
         } else {
@@ -349,10 +353,7 @@ public class EditTaskActivity extends BaseActivity {
             task.note = "<p><b>#" + selectedTag + "</b></p>" + task.note;
         }
 
-        Log.d(TAG, "Final save - title: '" + task.title + "', id: '" + task.id + "', note_length: " + task.note.length() + ", priority: " + task.priority);
-
         repo.upsert(task, this, () -> {
-            Log.d(TAG, "=== SAVE SUCCESS ===");
             runOnUiThread(() -> {
                 Toast.makeText(EditTaskActivity.this, "Заметка сохранена!", Toast.LENGTH_SHORT).show();
                 finish();
